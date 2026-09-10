@@ -1,0 +1,145 @@
+
+> vestige-app@0.1.0 start
+> next start
+
+▲ Next.js 16.3.4
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 201ms
+✓ Running next.config.ts took 45ms
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+[RENDER] [10%] downloading_assets: Caching media and sound assets locally...
+[RENDER] [30%] building_filtergraph: Constructing FFmpeg complex filtergraph...
+FFmpeg command generated: ffmpeg -i /tmp/vestige_cache/video_0_vclip_scene_01.mp4 -i /tmp/vestige_cache/video_1_vclip_scene_02.mp4 -i /tmp/vestige_cache/video_2_vclip_scene_03.mp4 -i /tmp/vestige_cache/video_3_vclip_scene_04.mp4 -i /tmp/vestige_cache/video_4_vclip_scene_05.mp4 -i /tmp/vestige_cache/audio_track_a1_0.mp3 -i /tmp/vestige_cache/audio_track_a1_1.mp3 -i /tmp/vestige_cache/audio_track_a1_2.mp3 -i /tmp/vestige_cache/audio_track_a1_3.mp3 -i /tmp/vestige_cache/audio_track_a2_0.mp3 -y -filter_complex [0:v]trim=start=0:duration=6.2,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.05:brightness=0:saturation=1,vignette=angle=0.08[v0];[1:v]trim=start=0:duration=5.4,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.15:brightness=-0.1:saturation=1.1,colorbalance=rs=-0.045:gs=0:bs=0.06,vignette=angle=0.27[v1];[2:v]trim=start=0:duration=6.1,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.2:brightness=-0.05:saturation=0.8,colorbalance=rs=-0.06:gs=0:bs=0.08000000000000002,vignette=angle=0.20[v2];[3:v]trim=start=0:duration=4.5,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.3:brightness=-0.2:saturation=1.2,colorbalance=rs=-0.03:gs=0:bs=0.04000000000000001,vignette=angle=0.39[v3];[4:v]trim=start=0:duration=7,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.2:brightness=-0.05:saturation=0.8,colorbalance=rs=-0.06:gs=0:bs=0.08000000000000002,vignette=angle=0.20[v4];[v0][v1][v2][v3][v4]concat=n=5:v=1:a=0[v_concat];[5:a]atrim=0:7.2,asetpts=PTS-STARTPTS,volume=0.8,adelay=0|0[a0];[6:a]atrim=0:6.9,asetpts=PTS-STARTPTS,volume=0.85,adelay=5200|5200[a1];[7:a]atrim=0:7.699999999999999,asetpts=PTS-STARTPTS,volume=0.9,adelay=10800|10800[a2];[8:a]atrim=0:5.5,asetpts=PTS-STARTPTS,volume=0.75,adelay=17200|17200[a3];[9:a]atrim=0:9,asetpts=PTS-STARTPTS,volume=0.85,adelay=21200|21200[a4];[a0][a1][a2][a3][a4]amix=inputs=5:duration=first:dropout_transition=2[a_mixed] -map [v_concat] -map [a_mixed] -c:v libx264 -preset fast -crf 20 -b:v 12M -pix_fmt yuv420p -r 30 -c:a aac -b:a 192k -ar 48000 -shortest /tmp/vestige_output/vestige_render_timeline_1789049645761_1789049723502.mp4
+[RENDER] [40%] rendering: FFmpeg render process started...
+[RENDER] [50%] rendering: Rendering frame: 0
+[RENDER] [50%] rendering: Rendering frame: 0
+[RENDER] [40%] rendering: Rendering frame: 0
+[RENDER] [40%] rendering: Rendering frame: 0
+[RENDER] [40%] rendering: Rendering frame: 10
+[RENDER] [40%] rendering: Rendering frame: 20
+[RENDER] [40%] rendering: Rendering frame: 27
+[RENDER] [40%] rendering: Rendering frame: 38
+[RENDER] [40%] rendering: Rendering frame: 49
+[RENDER] [40%] rendering: Rendering frame: 59
+[RENDER] [40%] rendering: Rendering frame: 70
+[RENDER] [40%] rendering: Rendering frame: 81
+[RENDER] [40%] rendering: Rendering frame: 92
+[RENDER] [40%] rendering: Rendering frame: 103
+[RENDER] [40%] rendering: Rendering frame: 115
+[RENDER] [40%] rendering: Rendering frame: 127
+[RENDER] [40%] rendering: Rendering frame: 140
+[RENDER] [41%] rendering: Rendering frame: 148
+[RENDER] [43%] rendering: Rendering frame: 155
+[RENDER] [44%] rendering: Rendering frame: 159
+[RENDER] [45%] rendering: Rendering frame: 166
+[RENDER] [47%] rendering: Rendering frame: 173
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 176
+[RENDER] [47%] rendering: Rendering frame: 178
+[RENDER] [47%] rendering: Rendering frame: 185
+[RENDER] [47%] rendering: Rendering frame: 191
+[RENDER] [47%] rendering: Rendering frame: 200
+[RENDER] [47%] rendering: Rendering frame: 207
+[RENDER] [47%] rendering: Rendering frame: 214
+[RENDER] [49%] rendering: Rendering frame: 221
+[RENDER] [50%] rendering: Rendering frame: 228
+[RENDER] [52%] rendering: Rendering frame: 235
+[RENDER] [53%] rendering: Rendering frame: 242
+[RENDER] [55%] rendering: Rendering frame: 250
+[RENDER] [57%] rendering: Rendering frame: 257
+[RENDER] [58%] rendering: Rendering frame: 264
+[RENDER] [59%] rendering: Rendering frame: 270
+[RENDER] [61%] rendering: Rendering frame: 278
+[RENDER] [63%] rendering: Rendering frame: 285
+[RENDER] [64%] rendering: Rendering frame: 292
+[RENDER] [66%] rendering: Rendering frame: 299
+[RENDER] [67%] rendering: Rendering frame: 305
+[RENDER] [69%] rendering: Rendering frame: 312
+[RENDER] [70%] rendering: Rendering frame: 320
+[RENDER] [73%] rendering: Rendering frame: 329
+[RENDER] [74%] rendering: Rendering frame: 337
+[RENDER] [76%] rendering: Rendering frame: 346
+[RENDER] [78%] rendering: Rendering frame: 351
+[RENDER] [79%] rendering: Rendering frame: 358
+[RENDER] [81%] rendering: Rendering frame: 365
+[RENDER] [82%] rendering: Rendering frame: 374
+[RENDER] [84%] rendering: Rendering frame: 380
+[RENDER] [86%] rendering: Rendering frame: 388
+[RENDER] [87%] rendering: Rendering frame: 396
+[RENDER] [89%] rendering: Rendering frame: 402
+[RENDER] [90%] rendering: Rendering frame: 409
+[RENDER] [92%] rendering: Rendering frame: 416
+[RENDER] [94%] rendering: Rendering frame: 424
+[RENDER] [95%] rendering: Rendering frame: 430
+[RENDER] [95%] rendering: Rendering frame: 437
+[RENDER] [95%] rendering: Rendering frame: 444
+[RENDER] [95%] rendering: Rendering frame: 450
+[RENDER] [95%] rendering: Rendering frame: 458
+[RENDER] [95%] rendering: Rendering frame: 465
+[RENDER] [95%] rendering: Rendering frame: 473
+[RENDER] [95%] rendering: Rendering frame: 481
+[RENDER] [95%] rendering: Rendering frame: 489
+[RENDER] [95%] rendering: Rendering frame: 496
+[RENDER] [95%] rendering: Rendering frame: 503
+[RENDER] [95%] rendering: Rendering frame: 510
+[RENDER] [95%] rendering: Rendering frame: 517
+[RENDER] [95%] rendering: Rendering frame: 525
+[RENDER] [95%] rendering: Rendering frame: 533
+[RENDER] [95%] rendering: Rendering frame: 576
+[RENDER] [100%] completed: Render completed successfully!
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY. A cinematic journey from the vast ocean surface down into the dark abyssal depths where unexpected bioluminescent life thrives.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
