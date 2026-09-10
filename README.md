@@ -16,17 +16,35 @@ Unlike basic AI video generators that simply stitch clips together, VESTIGE STUD
    - Audio J-cuts (audio lead-in) and L-cuts (audio tailing).
    - Smart 9:16 vertical video conversion with center-of-interest cropping.
    - Cinematic color presets (*Natural Documentary*, *Deep Ocean*, *Cold Scientific*, *Night*, *Warm Memory*, *Neutral*).
-5. **Modular FFmpeg Render Pipeline**: Filtergraph generation for cropping, scaling, color balance, eq, vignette, and multi-track audio mixing exported as high-bitrate MP4.
+5. **Vercel-Compatible FFmpeg Render Pipeline**:
+   - Dynamic path resolution (`getFFmpegPath()`) with bundled `ffmpeg-static` for serverless environments.
+   - Modular filtergraph generation (`buildCropFilter`, `buildScaleFilter`, `buildColorFilter`, `buildAudioFilter`).
+   - `IRenderBackend` interface for seamless future delegation to external worker infrastructure (AWS Lambda, Cloud Run, Modal).
 6. **Dark Obsidian Interface**: Obsidian dark surfaces (`#0a0b0e`), platinum typography, gold accents (`#c5a059`), and glass panels.
 7. **Zero-Lock Fallback System**: Full functionality out of the box with built-in curated cinematic media and offline AI models when live API keys are not provided.
 
 ---
 
-## 🚀 Quick Start & Development
+## 🚀 Deployment & Vercel Requirements
+
+### Vercel Serverless Configuration
+- FFmpeg binary is automatically bundled and resolved via `ffmpeg-static`.
+- No system-level `/usr/bin/ffmpeg` installation required on Vercel.
+- Max duration settings for Vercel Serverless Functions (`maxDuration = 60`) are configured for render API endpoints.
+- Diagnostic endpoint `/api/diagnostics` reports FFmpeg version, resolution status, and environment details.
+
+### Optional Custom FFmpeg Path
+If deploying on custom infrastructure, set `FFMPEG_PATH` in `.env`:
+```env
+FFMPEG_PATH=/custom/path/to/ffmpeg
+```
+
+---
+
+## 💻 Quick Start & Development
 
 ### Prerequisites
 - Node.js 18+
-- FFmpeg installed on system (`sudo apt install ffmpeg`)
 
 ### Installation
 
@@ -62,6 +80,7 @@ VESTIGE STUDIO includes a 1-click test benchmark:
 ```
 src/
   app/                    # Next.js App Router (Pages & API Routes)
+    api/diagnostics/      # Server diagnostics endpoint
     api/projects/         # Project creation & render trigger routes
     api/videos/           # Video file streaming route
   components/             # UI Components (Header, Settings, PromptInput, DirectorPlanView, TimelineView)
@@ -69,7 +88,7 @@ src/
     editing/              # Modular Editing Engine
       color/              # Color presets & matrix adjustments
       presets/            # Export presets (SHORT_HIGH, YOUTUBE_1080P, etc.)
-      render/             # FFmpeg complex filtergraph generators & pipeline runner
+      render/             # FFmpeg complex filtergraph generators, resolver, backend abstraction & pipeline runner
       timeline/           # Timeline compiler (J/L-cuts, tracks)
       types.ts            # Timeline & Clip data types
     providers/            # Provider Abstraction Layer

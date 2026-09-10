@@ -3,6 +3,8 @@ import { projectStore } from "@/lib/services/project-store";
 import { ModularRenderPipeline } from "@/lib/editing/render/render-pipeline";
 import { EXPORT_PRESETS } from "@/lib/editing/presets/export-presets";
 
+export const maxDuration = 60; // 60s max execution time for Vercel Serverless Function
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,32 +29,35 @@ export async function POST(
     project.renderProgress = { percent: 0, stage: "starting", message: "Initializing FFmpeg pipeline..." };
     projectStore.set(id, project);
 
-    // Asynchronous render background execution
     const renderer = new ModularRenderPipeline();
 
-    renderer.render(project.timeline, exportPreset, (progress) => {
-      project.renderProgress = {
-        percent: progress.percent,
-        stage: progress.stage,
-        message: progress.message,
-      };
-      if (progress.stage === "completed" && progress.outputPath) {
-        const filename = progress.outputPath.split("/").pop();
-        project.status = "completed";
-        project.renderedVideoUrl = `/api/videos/${filename}`;
-      } else if (progress.stage === "failed") {
-        project.status = "failed";
-      }
+    // Await render execution directly in serverless handler to ensure process doesn't get frozen
+    try {
+      const outputPath = await renderer.render(project.timeline, exportPreset, (progress) => {
+        project.renderProgress = {
+          percent: progress.percent,
+          stage: progress.stage,
+          message: progress.message,
+        };
+        project.updatedAt = new Date().toISOString();
+        projectStore.set(id, project);
+      });
+
+      const filename = outputPath.split("/").pop();
+      project.status = "completed";
+      project.renderedVideoUrl = `/api/videos/${filename}`;
+      project.renderProgress = { percent: 100, stage: "completed", message: "Render completed successfully!" };
       project.updatedAt = new Date().toISOString();
       projectStore.set(id, project);
-    }).catch((err) => {
-      console.error("Render background execution error:", err);
-      project.status = "failed";
-      project.renderProgress = { percent: 0, stage: "failed", message: err.message };
-      projectStore.set(id, project);
-    });
 
-    return NextResponse.json({ success: true, message: "Render started", project });
+      return NextResponse.json({ success: true, message: "Render completed", project });
+    } catch (renderErr: any) {
+      console.error("FFmpeg execution error during render:", renderErr);
+      project.status = "failed";
+      project.renderProgress = { percent: 0, stage: "failed", message: renderErr.message };
+      projectStore.set(id, project);
+      return NextResponse.json({ error: renderErr.message || "Render failed" }, { status: 500 });
+    }
   } catch (error: any) {
     console.error("Render route error:", error);
     return NextResponse.json({ error: error.message || "Failed to trigger render" }, { status: 500 });

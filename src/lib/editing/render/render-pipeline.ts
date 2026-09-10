@@ -3,6 +3,8 @@ import path from "path";
 import fs from "fs/promises";
 import { CinematicTimeline, ExportPreset } from "../types";
 import { buildCropFilter, buildScaleFilter, buildColorFilter } from "./filter-generator";
+import { getFFmpegPath, getFFmpegDiagnostics } from "./ffmpeg-resolver";
+import { IRenderBackend } from "./backend";
 
 export interface RenderProgress {
   stage: "downloading_assets" | "building_filtergraph" | "rendering" | "completed" | "failed";
@@ -10,17 +12,25 @@ export interface RenderProgress {
   message: string;
   outputPath?: string;
   error?: string;
+  diagnostics?: any;
 }
 
 export type ProgressCallback = (progress: RenderProgress) => void;
 
-export class ModularRenderPipeline {
+export class ModularRenderPipeline implements IRenderBackend {
+  readonly id = "local_ffmpeg";
+  readonly name = "Local FFmpeg Engine (Vercel Serverless Ready)";
+
   private cacheDir: string;
   private outputDir: string;
 
   constructor(cacheDir: string = "/tmp/vestige_cache", outputDir: string = "/tmp/vestige_output") {
     this.cacheDir = cacheDir;
     this.outputDir = outputDir;
+
+    // Dynamically configure fluent-ffmpeg with static/resolved FFmpeg path
+    const ffmpegPath = getFFmpegPath();
+    ffmpeg.setFfmpegPath(ffmpegPath);
   }
 
   async render(
@@ -31,12 +41,26 @@ export class ModularRenderPipeline {
     await fs.mkdir(this.cacheDir, { recursive: true });
     await fs.mkdir(this.outputDir, { recursive: true });
 
-    const report = (stage: RenderProgress["stage"], percent: number, message: string, outputPath?: string) => {
+    const diagnostics = getFFmpegDiagnostics();
+    console.log("[RENDER DIAGNOSTICS]", JSON.stringify(diagnostics, null, 2));
+
+    const report = (
+      stage: RenderProgress["stage"],
+      percent: number,
+      message: string,
+      outputPath?: string
+    ) => {
       console.log(`[RENDER] [${percent}%] ${stage}: ${message}`);
-      if (onProgress) onProgress({ stage, percent, message, outputPath });
+      if (onProgress) onProgress({ stage, percent, message, outputPath, diagnostics });
     };
 
-    report("downloading_assets", 10, "Caching media and sound assets locally...");
+    if (!diagnostics.ffmpegDetected) {
+      const errMessage = `FFmpeg executable not found or unexecutable at path: ${diagnostics.executablePath}`;
+      report("failed", 0, errMessage);
+      throw new Error(errMessage);
+    }
+
+    report("downloading_assets", 10, `Caching media and sound assets locally... (FFmpeg ${diagnostics.version?.slice(0, 30)})`);
 
     // 1. Ensure all video and audio assets are saved locally
     const preparedVideoClips = await Promise.all(
@@ -165,17 +189,15 @@ export class ModularRenderPipeline {
   private async ensureLocalAsset(url: string, filename: string): Promise<string> {
     const localPath = path.join(this.cacheDir, filename);
 
-    // If file exists and non-empty, use cached version
     try {
       const stat = await fs.stat(localPath);
       if (stat.size > 0) {
         return localPath;
       }
     } catch {
-      // Not cached, download or copy
+      // Not cached
     }
 
-    // Check if url is a local public relative/absolute path or file URL
     if (url.startsWith("http://localhost:3000") || url.startsWith("/")) {
       const relativePath = url.replace("http://localhost:3000", "");
       const fullLocalPath = path.join(process.cwd(), "public", relativePath.replace("/samples/", "samples/"));
