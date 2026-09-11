@@ -1,5 +1,5 @@
 import { CinematicTimeline, ExportPreset } from "../types";
-import { RenderProgress, ProgressCallback } from "./render-pipeline";
+import { ProgressCallback } from "./render-pipeline";
 
 export interface IRenderBackend {
   readonly id: string;
