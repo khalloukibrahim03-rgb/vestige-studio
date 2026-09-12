@@ -19,7 +19,7 @@ export interface ColorConfig {
   vignette?: number; // 0 to 1
 }
 
-export type TransitionType = "none" | "crossfade" | "fade_to_black" | "dip_to_black" | "visual_continuity";
+export type TransitionType = "none" | "crossfade" | "fade_to_black" | "fade_from_black" | "dip_to_black" | "visual_continuity";
 
 export interface TransitionConfig {
   type: TransitionType;

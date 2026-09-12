@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CinematicTimeline, VideoClipItem, AudioClipItem } from "@/lib/editing/types";
-import { Play, Pause, Volume2, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
+import { Play, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
 
 interface TimelineViewProps {
   timeline: CinematicTimeline;
@@ -30,9 +30,16 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Preview Player Container (9:16 vertical view box) */}
         <div className="lg:col-span-5 glass-panel rounded-xl p-4 border border-obsidian-700 flex flex-col items-center justify-center min-h-[480px]">
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-obsidian-800 text-gold-400 border border-gold-500/30 mb-3">
-            Realtime Preview Player ({timeline.targetWidth}x{timeline.targetHeight})
-          </span>
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-obsidian-800 text-gold-400 border border-gold-500/30">
+              Preview ({timeline.targetWidth}x{timeline.targetHeight})
+            </span>
+            {isPlaying && (
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">
+                Playing ({currentTime.toFixed(1)}s)
+              </span>
+            )}
+          </div>
 
           <div className="relative aspect-[9/16] h-[380px] sm:h-[440px] bg-black rounded-lg overflow-hidden border border-obsidian-700 shadow-2xl flex items-center justify-center">
             {videoUrl ? (
@@ -159,13 +166,21 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
 
         {/* Timeline Tracks Area */}
         <div className="space-y-3 bg-obsidian-950 p-4 rounded-lg border border-obsidian-800 overflow-x-auto">
-          {/* Time Ruler */}
-          <div className="flex justify-between text-[10px] text-platinum-500 font-mono pb-2 border-b border-obsidian-800">
-            <span>0.0s</span>
-            <span>{(totalDuration * 0.25).toFixed(1)}s</span>
-            <span>{(totalDuration * 0.5).toFixed(1)}s</span>
-            <span>{(totalDuration * 0.75).toFixed(1)}s</span>
-            <span>{totalDuration.toFixed(1)}s</span>
+          {/* Time Ruler & Scrub Playhead Indicator */}
+          <div className="relative border-b border-obsidian-800 pb-2">
+            <div className="flex justify-between text-[10px] text-platinum-500 font-mono">
+              <span>0.0s</span>
+              <span>{(totalDuration * 0.25).toFixed(1)}s</span>
+              <span>{(totalDuration * 0.5).toFixed(1)}s</span>
+              <span>{(totalDuration * 0.75).toFixed(1)}s</span>
+              <span>{totalDuration.toFixed(1)}s</span>
+            </div>
+            {videoUrl && (
+              <div
+                className="absolute top-0 bottom-0 w-0.5 bg-gold-400 shadow-sm shadow-gold-500/50 z-20 pointer-events-none"
+                style={{ left: `${Math.min(100, (currentTime / totalDuration) * 100)}%` }}
+              />
+            )}
           </div>
 
           {/* V1 — Primary Video Track */}
@@ -223,10 +238,17 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
                           width: `${widthPct}%`,
                           marginLeft: `${leftPct}%`,
                         }}
-                        className="h-full bg-blue-950/60 border border-blue-500/30 rounded p-1.5 flex items-center justify-between text-[10px] text-blue-300 font-mono shrink-0"
+                        className="h-full bg-blue-950/60 border border-blue-500/30 rounded p-1.5 flex items-center justify-between text-[10px] text-blue-300 font-mono shrink-0 relative overflow-hidden group"
                       >
-                        <span className="truncate">{clip.sceneId || "Audio Track"}</span>
-                        <span>{clip.duration.toFixed(1)}s</span>
+                        <div className="flex items-center space-x-1 truncate">
+                          <span className="truncate">{clip.sceneId || "Audio Track"}</span>
+                          {(clip.fadeInDuration > 0.5 || clip.fadeOutDuration > 0.5) && (
+                            <span className="text-[8px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-1 rounded font-mono shrink-0">
+                              J/L Cut
+                            </span>
+                          )}
+                        </div>
+                        <span className="shrink-0">{clip.duration.toFixed(1)}s</span>
                       </div>
                     );
                   })
