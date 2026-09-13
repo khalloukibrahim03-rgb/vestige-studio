@@ -70,9 +70,10 @@ export async function POST(req: NextRequest) {
     projectStore.set(projectId, project);
 
     return NextResponse.json({ success: true, project });
-  } catch (error: any) {
-    console.error("Project generation error:", error);
-    return NextResponse.json({ error: error.message || "Failed to generate project" }, { status: 500 });
+  } catch (error) {
+    const err = error as Error;
+    console.error("Project generation error:", err);
+    return NextResponse.json({ error: err.message || "Failed to generate project" }, { status: 500 });
   }
 }
 

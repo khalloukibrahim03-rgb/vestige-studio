@@ -24,7 +24,8 @@ export async function GET(
     } catch {
       return NextResponse.json({ error: "Video file not found or expired" }, { status: 404 });
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

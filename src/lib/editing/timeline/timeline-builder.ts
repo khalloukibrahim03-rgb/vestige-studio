@@ -3,6 +3,8 @@ import { MediaAsset, SoundAsset } from "../../providers/types";
 import { CinematicTimeline, VideoClipItem, AudioClipItem } from "../types";
 import { getColorPreset } from "../color/presets";
 import { EXPORT_PRESETS } from "../presets/export-presets";
+import { resolveCutStrategy } from "../cuts";
+import { calculateJLTiming } from "../timing";
 
 export function generateTimelineFromDirectorPlan(
   plan: DirectorPlan,
@@ -26,6 +28,8 @@ export function generateTimelineFromDirectorPlan(
     // 1. Construct Video Clip
     if (videoAsset) {
       const colorPreset = getColorPreset(scene.colorPreset);
+      const transitionInConfig = resolveCutStrategy(scene.cutStrategy, scene.transitionDuration || 0.5);
+
       const videoClip: VideoClipItem = {
         id: `vclip_${scene.sceneId}`,
         sceneId: scene.sceneId,
@@ -39,10 +43,7 @@ export function generateTimelineFromDirectorPlan(
         },
         color: colorPreset.config,
         colorPresetName: scene.colorPreset,
-        transitionIn: {
-          type: scene.cutStrategy === "fade_to_black" ? "fade_to_black" : scene.cutStrategy === "crossfade" ? "crossfade" : "none",
-          duration: scene.transitionDuration || 0.5,
-        },
+        transitionIn: transitionInConfig,
         transitionOut: {
           type: "none",
           duration: 0,
@@ -53,21 +54,22 @@ export function generateTimelineFromDirectorPlan(
 
     // 2. Construct Audio Clips (with J-cut and L-cut offsets!)
     if (soundAsset) {
-      const jOffset = scene.jCutOffset || 0; // Negative number e.g. -1.0s means start earlier
-      const lOffset = scene.lCutOffset || 0; // Positive number e.g. +1.0s means end later
-
-      const audioStart = Math.max(0, currentTimelineTime + jOffset);
-      const audioDuration = clipDuration + Math.abs(jOffset) + lOffset;
+      const jlTiming = calculateJLTiming(
+        scene.jCutOffset || 0,
+        scene.lCutOffset || 0,
+        currentTimelineTime,
+        clipDuration
+      );
 
       const audioClip: AudioClipItem = {
         id: `aclip_env_${scene.sceneId}`,
         sceneId: scene.sceneId,
         sourceUrl: soundAsset.downloadUrl,
         track: "A1_environment",
-        timelineStart: audioStart,
-        duration: audioDuration,
-        fadeInDuration: Math.abs(jOffset) > 0 ? 0.8 : 0.3,
-        fadeOutDuration: lOffset > 0 ? 1.0 : 0.3,
+        timelineStart: jlTiming.audioTimelineStart,
+        duration: jlTiming.audioDuration,
+        fadeInDuration: jlTiming.fadeInDuration,
+        fadeOutDuration: jlTiming.fadeOutDuration,
         volume: scene.soundLevel ?? 0.8,
       };
 
