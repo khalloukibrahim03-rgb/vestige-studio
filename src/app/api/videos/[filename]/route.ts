@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs/promises";
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
@@ -24,7 +24,8 @@ export async function GET(
     } catch {
       return NextResponse.json({ error: "Video file not found or expired" }, { status: 404 });
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -2,9 +2,163 @@
 > vestige-app@0.1.0 dev
 > next dev
 
-⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 ▲ Next.js 16.3.4 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.0.2:3001
-✓ Ready in 687ms
-✓ Running next.config.ts took 43ms
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 566ms
+✓ Running next.config.ts took 53ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+○ Compiling / ...
+ GET / 200 in 4.2s (next.js: 3.8s, application-code: 357ms)
+ GET / 200 in 81ms (next.js: 21ms, application-code: 60ms)
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY. A cinematic journey from the vast ocean surface down into the dark abyssal depths where unexpected bioluminescent life thrives.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+ POST /api/projects 200 in 2.1s (next.js: 1979ms, application-code: 155ms)
+ GET /api/projects/proj_1789351354423/render 200 in 278ms (next.js: 248ms, application-code: 30ms)
+/bin/sh: 1: ffmpeg: not found
+[FFmpeg Resolver] Execution test failed: Command failed: "ffmpeg" -version
+/bin/sh: 1: ffmpeg: not found
+
+[RENDER DIAGNOSTICS] {
+  "ffmpegDetected": false,
+  "executablePath": "ffmpeg",
+  "version": null,
+  "isStaticBundle": false,
+  "environment": "development"
+}
+[RENDER] [0%] failed: FFmpeg executable not found or unexecutable at path: ffmpeg
+FFmpeg execution error during render: Error: FFmpeg executable not found or unexecutable at path: ffmpeg
+    at ModularRenderPipeline.render (src/lib/editing/render/render-pipeline.ts:60:13)
+    at async POST (src/app/api/projects/[id]/render/route.ts:36:26)
+  58 |       const errMessage = `FFmpeg executable not found or unexecutable at path: ${diagnostics.executablePath}`;
+  59 |       report("failed", 0, errMessage);
+> 60 |       throw new Error(errMessage);
+     |             ^
+  61 |     }
+  62 |
+  63 |     report("downloading_assets", 10, `Caching media and sound assets locally... (FFmpeg ${diagnostics.version?.slice(0, 30)})`);
+ POST /api/projects/proj_1789351354423/render 500 in 1673ms (next.js: 1275ms, application-code: 399ms)
+ GET / 200 in 73ms (next.js: 11ms, application-code: 62ms)
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY. A cinematic journey from the vast ocean surface down into the dark abyssal depths where unexpected bioluminescent life thrives.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+ POST /api/projects 200 in 18ms (next.js: 4ms, application-code: 14ms)
+/bin/sh: 1: ffmpeg: not found
+[FFmpeg Resolver] Execution test failed: Command failed: "ffmpeg" -version
+/bin/sh: 1: ffmpeg: not found
+
+[RENDER DIAGNOSTICS] {
+  "ffmpegDetected": false,
+  "executablePath": "ffmpeg",
+  "version": null,
+  "isStaticBundle": false,
+  "environment": "development"
+}
+[RENDER] [0%] failed: FFmpeg executable not found or unexecutable at path: ffmpeg
+FFmpeg execution error during render: Error: FFmpeg executable not found or unexecutable at path: ffmpeg
+    at ModularRenderPipeline.render (src/lib/editing/render/render-pipeline.ts:60:13)
+    at async POST (src/app/api/projects/[id]/render/route.ts:36:26)
+  58 |       const errMessage = `FFmpeg executable not found or unexecutable at path: ${diagnostics.executablePath}`;
+  59 |       report("failed", 0, errMessage);
+> 60 |       throw new Error(errMessage);
+     |             ^
+  61 |     }
+  62 |
+  63 |     report("downloading_assets", 10, `Caching media and sound assets locally... (FFmpeg ${diagnostics.version?.slice(0, 30)})`);
+ POST /api/projects/proj_1789351464828/render 500 in 50ms (next.js: 15ms, application-code: 35ms)
+ GET / 200 in 57ms (next.js: 5ms, application-code: 52ms)
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY. A cinematic journey from the vast ocean surface down into the dark abyssal depths where unexpected bioluminescent life thrives.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+ POST /api/projects 200 in 16ms (next.js: 4ms, application-code: 12ms)
+[RENDER DIAGNOSTICS] {
+  "ffmpegDetected": true,
+  "executablePath": "/app/node_modules/ffmpeg-static/ffmpeg",
+  "version": "ffmpeg version 7.0.2-static https://johnvansickle.com/ffmpeg/  Copyright (c) 2000-2024 the FFmpeg developers",
+  "isStaticBundle": true,
+  "environment": "development"
+}
+[RENDER] [10%] downloading_assets: Caching media and sound assets locally... (FFmpeg ffmpeg version 7.0.2-static ht)
+[RENDER] [30%] building_filtergraph: Constructing FFmpeg complex filtergraph...
+FFmpeg command generated: ffmpeg -i /tmp/vestige_cache/video_0_vclip_scene_01.mp4 -i /tmp/vestige_cache/video_1_vclip_scene_02.mp4 -i /tmp/vestige_cache/video_2_vclip_scene_03.mp4 -i /tmp/vestige_cache/video_3_vclip_scene_04.mp4 -i /tmp/vestige_cache/video_4_vclip_scene_05.mp4 -i /tmp/vestige_cache/audio_track_a1_0.mp3 -i /tmp/vestige_cache/audio_track_a1_1.mp3 -i /tmp/vestige_cache/audio_track_a1_2.mp3 -i /tmp/vestige_cache/audio_track_a1_3.mp3 -i /tmp/vestige_cache/audio_track_a2_0.mp3 -y -filter_complex [0:v]trim=start=0:duration=6.2,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.05:brightness=0:saturation=1,vignette=angle=0.08[v0];[1:v]trim=start=0:duration=5.4,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.15:brightness=-0.1:saturation=1.1,colorbalance=rs=-0.045:gs=0:bs=0.06,vignette=angle=0.27[v1];[2:v]trim=start=0:duration=6.1,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.2:brightness=-0.05:saturation=0.8,colorbalance=rs=-0.06:gs=0:bs=0.08000000000000002,vignette=angle=0.20[v2];[3:v]trim=start=0:duration=4.5,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.3:brightness=-0.2:saturation=1.2,colorbalance=rs=-0.03:gs=0:bs=0.04000000000000001,vignette=angle=0.39[v3];[4:v]trim=start=0:duration=7,setpts=PTS-STARTPTS,crop=608:1080:656:0,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,eq=contrast=1.2:brightness=-0.05:saturation=0.8,colorbalance=rs=-0.06:gs=0:bs=0.08000000000000002,vignette=angle=0.20[v4];[v0][v1][v2][v3][v4]concat=n=5:v=1:a=0[v_concat];[5:a]atrim=0:7.2,asetpts=PTS-STARTPTS,volume=0.8,adelay=0|0[a0];[6:a]atrim=0:6.9,asetpts=PTS-STARTPTS,volume=0.85,adelay=5200|5200[a1];[7:a]atrim=0:7.699999999999999,asetpts=PTS-STARTPTS,volume=0.9,adelay=10800|10800[a2];[8:a]atrim=0:5.5,asetpts=PTS-STARTPTS,volume=0.75,adelay=17200|17200[a3];[9:a]atrim=0:9,asetpts=PTS-STARTPTS,volume=0.85,adelay=21200|21200[a4];[a0][a1][a2][a3][a4]amix=inputs=5:duration=first:dropout_transition=2[a_mixed] -map [v_concat] -map [a_mixed] -c:v libx264 -preset fast -crf 20 -b:v 12M -pix_fmt yuv420p -r 30 -c:a aac -b:a 192k -ar 48000 -shortest /tmp/vestige_output/vestige_render_timeline_1789351637058_1789351640679.mp4
+[RENDER] [40%] rendering: FFmpeg render process started...
+ GET /api/projects/proj_1789351637053/render 200 in 21ms (next.js: 16ms, application-code: 6ms)
+[RENDER] [50%] rendering: Rendering frame: 0
+ GET /api/projects/proj_1789351637053/render 200 in 42ms (next.js: 33ms, application-code: 8ms)
+[RENDER] [50%] rendering: Rendering frame: 0
+[RENDER] [50%] rendering: Rendering frame: 0
+ GET /api/projects/proj_1789351637053/render 200 in 33ms (next.js: 18ms, application-code: 15ms)
+[RENDER] [50%] rendering: Rendering frame: 0
+[RENDER] [50%] rendering: Rendering frame: 0
+[RENDER] [50%] rendering: Rendering frame: 0
+ GET /api/projects/proj_1789351637053/render 200 in 17ms (next.js: 3ms, application-code: 15ms)
+[RENDER] [50%] rendering: Rendering frame: 7
+[RENDER] [50%] rendering: Rendering frame: 18
+ GET /api/projects/proj_1789351637053/render 200 in 24ms (next.js: 14ms, application-code: 11ms)
+[RENDER] [50%] rendering: Rendering frame: 22
+[RENDER] [50%] rendering: Rendering frame: 33
+ GET /api/projects/proj_1789351637053/render 200 in 44ms (next.js: 24ms, application-code: 20ms)
+[RENDER] [50%] rendering: Rendering frame: 42
+[RENDER] [50%] rendering: Rendering frame: 53
+ GET /api/projects/proj_1789351637053/render 200 in 16ms (next.js: 7ms, application-code: 9ms)
+[RENDER] [50%] rendering: Rendering frame: 64
+[RENDER] [50%] rendering: Rendering frame: 76
+ GET /api/projects/proj_1789351637053/render 200 in 36ms (next.js: 28ms, application-code: 8ms)
+[RENDER] [50%] rendering: Rendering frame: 88
+[RENDER] [50%] rendering: Rendering frame: 99
+[RENDER] [50%] rendering: Rendering frame: 111
+ GET /api/projects/proj_1789351637053/render 200 in 17ms (next.js: 3ms, application-code: 14ms)
+[RENDER] [50%] rendering: Rendering frame: 122
+[RENDER] [50%] rendering: Rendering frame: 135
+ GET /api/projects/proj_1789351637053/render 200 in 41ms (next.js: 26ms, application-code: 15ms)
+[RENDER] [50%] rendering: Rendering frame: 144
+[RENDER] [50%] rendering: Rendering frame: 153
+ GET /api/projects/proj_1789351637053/render 200 in 11ms (next.js: 3ms, application-code: 8ms)
+[RENDER] [50%] rendering: Rendering frame: 159
+[RENDER] [50%] rendering: Rendering frame: 161
+ GET /api/projects/proj_1789351637053/render 200 in 24ms (next.js: 16ms, application-code: 9ms)
+[RENDER] [50%] rendering: Rendering frame: 162
+[RENDER] [50%] rendering: Rendering frame: 168
+ GET /api/projects/proj_1789351637053/render 200 in 17ms (next.js: 3ms, application-code: 14ms)
+[RENDER] [50%] rendering: Rendering frame: 178
+[RENDER] [50%] rendering: Rendering frame: 183
+[RENDER] [50%] rendering: Rendering frame: 208
+ GET /api/projects/proj_1789351637053/render 200 in 41ms (next.js: 24ms, application-code: 18ms)
+ GET /api/projects/proj_1789351637053/render 200 in 18ms (next.js: 7ms, application-code: 11ms)
+ GET /api/projects/proj_1789351637053/render 200 in 49ms (next.js: 33ms, application-code: 15ms)
+ GET /api/projects/proj_1789351637053/render 200 in 16ms (next.js: 5ms, application-code: 11ms)
+[RENDER] [50%] rendering: Rendering frame: 216
+ GET /api/projects/proj_1789351637053/render 200 in 22ms (next.js: 17ms, application-code: 5ms)
+[RENDER] [100%] completed: Render completed successfully!
+ POST /api/projects/proj_1789351637053/render 200 in 19.6s (next.js: 19ms, application-code: 19.6s)
+ GET /api/videos/vestige_render_timeline_1789351637058_1789351640679.mp4 200 in 1068ms (next.js: 1053ms, application-code: 15ms)
