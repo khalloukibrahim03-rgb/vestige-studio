@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CinematicTimeline, VideoClipItem, AudioClipItem } from "@/lib/editing/types";
-import { Play, Pause, Volume2, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
+import { Play, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
 
 interface TimelineViewProps {
   timeline: CinematicTimeline;
@@ -12,17 +12,11 @@ interface TimelineViewProps {
 }
 
 export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering }: TimelineViewProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedClipId, setSelectedClipId] = useState<string | null>(timeline.videoTrack.clips[0]?.id || null);
-  const [currentTime, setCurrentTime] = useState(0);
 
   const selectedClip = timeline.videoTrack.clips.find((c) => c.id === selectedClipId);
 
   const totalDuration = timeline.totalDuration || 30;
-
-  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    setCurrentTime(e.currentTarget.currentTime);
-  };
 
   return (
     <div className="space-y-6">
@@ -39,9 +33,6 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
               <video
                 src={videoUrl}
                 controls
-                onTimeUpdate={handleVideoTimeUpdate}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
                 className="w-full h-full object-contain"
               />
             ) : (

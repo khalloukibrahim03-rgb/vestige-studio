@@ -7,7 +7,7 @@ import { PromptInput } from "@/components/PromptInput";
 import { DirectorPlanView } from "@/components/DirectorPlanView";
 import { TimelineView } from "@/components/TimelineView";
 import { ProjectData } from "@/lib/services/project-store";
-import { Sparkles, Download, RefreshCw, CheckCircle2, Film, Wand2 } from "lucide-react";
+import { Download, RefreshCw, CheckCircle2, Wand2 } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "director" | "timeline" | "export">("dashboard");
@@ -39,9 +39,10 @@ export default function Home() {
 
       setCurrentProject(data.project);
       setActiveTab("director");
-    } catch (err: any) {
-      alert(`Error creating project: ${err.message}`);
-    } finally {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error creating project";
+      alert(`Error creating project: ${errorMessage}`);
+    } flexally: {
       setIsLoading(false);
       setStatusMessage("");
     }
@@ -62,8 +63,13 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || "Failed to trigger render");
 
       setCurrentProject(data.project);
-    } catch (err: any) {
-      alert(`Render error: ${err.message}`);
+      if (data.project.status === "completed") {
+        setIsRendering(false);
+        setActiveTab("export");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Render error";
+      alert(`Render error: ${errorMessage}`);
       setIsRendering(false);
     }
   };
