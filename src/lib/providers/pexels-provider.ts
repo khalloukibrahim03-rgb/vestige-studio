@@ -58,33 +58,42 @@ export class PexelsProvider implements MediaProvider {
   }
 
   async evaluateAndSelectBestShot(candidates: MediaAsset[], scene: DirectorScene): Promise<MediaAsset> {
-    if (candidates.length === 0) {
-      const fallback = this.getFallbackAssets(scene.selectedAssetQuery)[0];
-      return {
-        ...fallback,
-        score: {
-          storyRelevance: 95,
-          composition: 92,
-          movement: 90,
-          lighting: 88,
-          continuity: 94,
-          overall: 92,
-        },
-      };
-    }
+    const list = candidates.length > 0 ? candidates : this.getFallbackAssets(scene.selectedAssetQuery);
 
-    const scoredCandidates = candidates.map((asset, index) => {
-      const baseRelevance = 90 - index * 3;
-      const composition = asset.width >= 1920 ? 94 : 85;
-      const movement = asset.duration >= scene.duration ? 92 : 80;
-      const lighting = 90;
-      const continuity = 93;
-      const overall = Math.round((baseRelevance * 0.3) + (composition * 0.25) + (movement * 0.2) + (lighting * 0.15) + (continuity * 0.1));
+    const scoredCandidates = list.map((asset, index) => {
+      // 1. Story relevance based on query match & position
+      const queryTerms = scene.selectedAssetQuery.toLowerCase().split(" ");
+      const titleLower = asset.title.toLowerCase();
+      const matchCount = queryTerms.filter((term) => term.length > 3 && titleLower.includes(term)).length;
+      const storyRelevance = Math.min(98, Math.max(70, 85 + matchCount * 5 - index * 2));
+
+      // 2. Composition score based on HD/4K resolution and high pixel density
+      const resolutionScore = asset.width >= 3840 ? 98 : asset.width >= 1920 ? 92 : 80;
+      const composition = resolutionScore;
+
+      // 3. Movement score based on clip duration sufficiency for scene pacing
+      const durationMatch = asset.duration >= scene.duration ? 95 : 75;
+      const movement = durationMatch;
+
+      // 4. Lighting & aesthetic alignment with scene visual goal
+      const lighting = scene.lighting.toLowerCase().includes("dark") || scene.lighting.toLowerCase().includes("dim") ? 92 : 88;
+
+      // 5. Continuity score
+      const continuity = 94 - index;
+
+      // Overall weighted composite score
+      const overall = Math.round(
+        storyRelevance * 0.35 +
+        composition * 0.25 +
+        movement * 0.20 +
+        lighting * 0.10 +
+        continuity * 0.10
+      );
 
       return {
         ...asset,
         score: {
-          storyRelevance: baseRelevance,
+          storyRelevance,
           composition,
           movement,
           lighting,
