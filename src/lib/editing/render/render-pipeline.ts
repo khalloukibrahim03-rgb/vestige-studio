@@ -136,7 +136,18 @@ export class ModularRenderPipeline implements IRenderBackend {
           const inputIdx = preparedVideoClips.length + idx;
           const delayMs = Math.round(Math.max(0, item.clip.timelineStart) * 1000);
           const volume = item.clip.volume ?? 0.8;
-          complexFilter.push(`[${inputIdx}:a]atrim=0:${item.clip.duration},asetpts=PTS-STARTPTS,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`);
+          let audioFilter = `[${inputIdx}:a]atrim=0:${item.clip.duration},asetpts=PTS-STARTPTS`;
+
+          if (item.clip.fadeInDuration && item.clip.fadeInDuration > 0) {
+            audioFilter += `,afade=t=in:st=0:d=${item.clip.fadeInDuration}`;
+          }
+          if (item.clip.fadeOutDuration && item.clip.fadeOutDuration > 0 && item.clip.duration > item.clip.fadeOutDuration) {
+            const fadeOutStart = (item.clip.duration - item.clip.fadeOutDuration).toFixed(2);
+            audioFilter += `,afade=t=out:st=${fadeOutStart}:d=${item.clip.fadeOutDuration}`;
+          }
+
+          audioFilter += `,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`;
+          complexFilter.push(audioFilter);
         });
 
         const concatAudioInputs = audioInputs.map((_, idx) => `[a${idx}]`).join("");
