@@ -15,20 +15,28 @@ export interface FFmpegDiagnostics {
  * Strategy order:
  * 1. Process environment override (FFMPEG_PATH)
  * 2. Static bundled binary via `ffmpeg-static` (works seamlessly in Vercel Serverless / Node runtimes)
- * 3. System PATH fallback ("ffmpeg")
+ * 3. Fallback to node_modules/ffmpeg-static/ffmpeg
+ * 4. System PATH fallback ("ffmpeg")
  */
 export function getFFmpegPath(): string {
   // 1. Explicit env override
-  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+  if (process.env.FFMPEG_PATH && fs.existsSync(/*turbopackIgnore: true*/ process.env.FFMPEG_PATH)) {
     return process.env.FFMPEG_PATH;
   }
 
-  // 2. Bundled static binary from ffmpeg-static
-  if (ffmpegStatic && typeof ffmpegStatic === "string" && fs.existsSync(ffmpegStatic)) {
-    return ffmpegStatic;
+  // 2. Bundled static binary from ffmpeg-static (ESM / CJS safe)
+  const staticPath = (typeof ffmpegStatic === "string" ? ffmpegStatic : (ffmpegStatic as unknown as { default?: string })?.default) || "";
+  if (staticPath && fs.existsSync(/*turbopackIgnore: true*/ staticPath)) {
+    return staticPath;
   }
 
-  // 3. Fallback to system ffmpeg command
+  // 3. Fallback to direct path in node_modules
+  const directNodeModulesPath = "./node_modules/ffmpeg-static/ffmpeg";
+  if (fs.existsSync(/*turbopackIgnore: true*/ directNodeModulesPath)) {
+    return directNodeModulesPath;
+  }
+
+  // 4. Fallback to system ffmpeg command
   return "ffmpeg";
 }
 
@@ -47,8 +55,9 @@ export function getFFmpegDiagnostics(): FFmpegDiagnostics {
       ffmpegDetected = true;
       version = firstLine.trim();
     }
-  } catch (err: any) {
-    console.warn("[FFmpeg Resolver] Execution test failed:", err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn("[FFmpeg Resolver] Execution test failed:", message);
   }
 
   return {
