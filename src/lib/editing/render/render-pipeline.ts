@@ -1,7 +1,7 @@
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import fs from "fs/promises";
-import { CinematicTimeline, ExportPreset } from "../types";
+import { CinematicTimeline, ExportPreset, AudioClipItem } from "../types";
 import { buildCropFilter, buildScaleFilter, buildColorFilter } from "./filter-generator";
 import { getFFmpegPath, getFFmpegDiagnostics } from "./ffmpeg-resolver";
 import { IRenderBackend } from "./backend";
@@ -12,7 +12,7 @@ export interface RenderProgress {
   message: string;
   outputPath?: string;
   error?: string;
-  diagnostics?: any;
+  diagnostics?: Record<string, unknown>;
 }
 
 export type ProgressCallback = (progress: RenderProgress) => void;
@@ -51,7 +51,7 @@ export class ModularRenderPipeline implements IRenderBackend {
       outputPath?: string
     ) => {
       console.log(`[RENDER] [${percent}%] ${stage}: ${message}`);
-      if (onProgress) onProgress({ stage, percent, message, outputPath, diagnostics });
+      if (onProgress) onProgress({ stage, percent, message, outputPath, diagnostics: diagnostics as unknown as Record<string, unknown> });
     };
 
     if (!diagnostics.ffmpegDetected) {
@@ -100,7 +100,7 @@ export class ModularRenderPipeline implements IRenderBackend {
       });
 
       // Collect audio inputs
-      const audioInputs: { path: string; track: string; clipIndex: number; clip: any }[] = [];
+      const audioInputs: { path: string; track: string; clipIndex: number; clip: AudioClipItem }[] = [];
       preparedAudioTracks.forEach((track) => {
         track.clips.forEach((clip, idx) => {
           command.input(clip.localFilePath!);
