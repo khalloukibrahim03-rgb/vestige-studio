@@ -51,16 +51,18 @@ export async function POST(
       projectStore.set(id, project);
 
       return NextResponse.json({ success: true, message: "Render completed", project });
-    } catch (renderErr: any) {
+    } catch (renderErr: unknown) {
+      const message = renderErr instanceof Error ? renderErr.message : String(renderErr);
       console.error("FFmpeg execution error during render:", renderErr);
       project.status = "failed";
-      project.renderProgress = { percent: 0, stage: "failed", message: renderErr.message };
+      project.renderProgress = { percent: 0, stage: "failed", message };
       projectStore.set(id, project);
-      return NextResponse.json({ error: renderErr.message || "Render failed" }, { status: 500 });
+      return NextResponse.json({ error: message || "Render failed" }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error("Render route error:", error);
-    return NextResponse.json({ error: error.message || "Failed to trigger render" }, { status: 500 });
+    return NextResponse.json({ error: message || "Failed to trigger render" }, { status: 500 });
   }
 }
 
