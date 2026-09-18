@@ -1,0 +1,16 @@
+// Unified export entry point for the Vestige Studio Editing Engine
+export * from "./types";
+export * from "./presets/export-presets";
+export * from "./color/presets";
+export * from "./timeline/timeline-builder";
+export * from "./cuts";
+export * from "./transitions";
+export * from "./timing";
+export * from "./crop";
+export * from "./scale";
+export * from "./motion";
+export * from "./audio";
+export * from "./render/backend";
+export * from "./render/ffmpeg-resolver";
+export * from "./render/filter-generator";
+export * from "./render/render-pipeline";
