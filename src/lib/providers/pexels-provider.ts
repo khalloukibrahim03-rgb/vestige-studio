@@ -1,6 +1,29 @@
 import { MediaProvider, MediaAsset } from "./types";
 import { DirectorScene } from "../schemas/director-plan";
 
+interface PexelsVideoFile {
+  id: number;
+  quality: string;
+  file_type: string;
+  width: number;
+  height: number;
+  fps: number;
+  link: string;
+}
+
+interface PexelsVideoItem {
+  id: number;
+  width: number;
+  height: number;
+  url: string;
+  image: string;
+  duration: number;
+  user?: {
+    name?: string;
+  };
+  video_files?: PexelsVideoFile[];
+}
+
 export class PexelsProvider implements MediaProvider {
   readonly name = "Pexels";
   private apiKey: string | undefined;
@@ -33,9 +56,9 @@ export class PexelsProvider implements MediaProvider {
         return this.getFallbackAssets(query);
       }
 
-      return data.videos.map((v: any) => {
+      return data.videos.map((v: PexelsVideoItem) => {
         const files = v.video_files || [];
-        const bestFile = files.find((f: any) => f.quality === "hd" && f.width >= 1080) || files[0] || {};
+        const bestFile = files.find((f: PexelsVideoFile) => f.quality === "hd" && f.width >= 1080) || files[0] || { link: "", width: 1920, height: 1080 };
 
         return {
           provider: this.name,

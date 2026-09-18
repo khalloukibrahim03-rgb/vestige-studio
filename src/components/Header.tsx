@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Film, Compass, Settings, Key, Sliders, Layers } from "lucide-react";
+import { Sparkles, Film, Compass, Key, Sliders, Layers } from "lucide-react";
 
 interface HeaderProps {
   onOpenSettings: () => void;
