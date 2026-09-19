@@ -2,9 +2,50 @@
 > vestige-app@0.1.0 dev
 > next dev
 
-⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 ▲ Next.js 16.3.4 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.0.2:3001
-✓ Ready in 687ms
-✓ Running next.config.ts took 43ms
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 713ms
+✓ Running next.config.ts took 60ms
+
+○ Compiling / ...
+ GET / 200 in 4.2s (next.js: 3.9s, application-code: 344ms)
+ GET / 200 in 91ms (next.js: 14ms, application-code: 77ms)
+ GET / 200 in 78ms (next.js: 6ms, application-code: 72ms)
+ GET / 200 in 71ms (next.js: 5ms, application-code: 66ms)
+GEMINI_API_KEY is not set. Using AI Director fallback system for: THE DEEP IS NOT EMPTY. A cinematic journey from the vast ocean surface down into the dark abyssal depths where unexpected bioluminescent life thrives.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+PEXELS_API_KEY is not set. Falling back to sample assets.
+FREESOUND_API_KEY is not set. Falling back to sample audio assets.
+ POST /api/projects 200 in 2.8s (next.js: 2.6s, application-code: 180ms)
+ GET /api/projects/proj_1789782929730/render 200 in 557ms (next.js: 514ms, application-code: 43ms)
+/bin/sh: 1: ffmpeg: not found
+[FFmpeg Resolver] Execution test failed: Command failed: "ffmpeg" -version
+/bin/sh: 1: ffmpeg: not found
+
+[RENDER DIAGNOSTICS] {
+  "ffmpegDetected": false,
+  "executablePath": "ffmpeg",
+  "version": null,
+  "isStaticBundle": false,
+  "environment": "development"
+}
+[RENDER] [0%] failed: FFmpeg executable not found or unexecutable at path: ffmpeg
+FFmpeg execution error during render: Error: FFmpeg executable not found or unexecutable at path: ffmpeg
+    at ModularRenderPipeline.render (src/lib/editing/render/render-pipeline.ts:60:13)
+    at async POST (src/app/api/projects/[id]/render/route.ts:36:26)
+  58 |       const errMessage = `FFmpeg executable not found or unexecutable at path: ${diagnostics.executablePath}`;
+  59 |       report("failed", 0, errMessage);
+> 60 |       throw new Error(errMessage);
+     |             ^
+  61 |     }
+  62 |
+  63 |     report("downloading_assets", 10, `Caching media and sound assets locally... (FFmpeg ${diagnostics.version?.slice(0, 30)})`);
+ POST /api/projects/proj_1789782929730/render 500 in 2.1s (next.js: 1550ms, application-code: 522ms)
