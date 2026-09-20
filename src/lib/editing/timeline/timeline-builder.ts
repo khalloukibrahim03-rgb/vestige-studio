@@ -3,6 +3,8 @@ import { MediaAsset, SoundAsset } from "../../providers/types";
 import { CinematicTimeline, VideoClipItem, AudioClipItem } from "../types";
 import { getColorPreset } from "../color/presets";
 import { EXPORT_PRESETS } from "../presets/export-presets";
+import { calculateCutOverlapBounds } from "../cuts/cuts";
+import { calculateDynamicShotDuration } from "../timing/timing";
 
 export function generateTimelineFromDirectorPlan(
   plan: DirectorPlan,
@@ -21,7 +23,11 @@ export function generateTimelineFromDirectorPlan(
     const videoAsset = assetMatch?.video;
     const soundAsset = assetMatch?.sound;
 
-    const clipDuration = scene.duration;
+    const clipDuration = calculateDynamicShotDuration({
+      shotType: scene.shotType,
+      purpose: scene.purpose,
+      baseDuration: scene.duration,
+    });
 
     // 1. Construct Video Clip
     if (videoAsset) {
@@ -51,13 +57,17 @@ export function generateTimelineFromDirectorPlan(
       videoClips.push(videoClip);
     }
 
-    // 2. Construct Audio Clips (with J-cut and L-cut offsets!)
+    // 2. Construct Audio Clips with J-cut and L-cut offsets calculated via cuts submodule
     if (soundAsset) {
-      const jOffset = scene.jCutOffset || 0; // Negative number e.g. -1.0s means start earlier
-      const lOffset = scene.lCutOffset || 0; // Positive number e.g. +1.0s means end later
+      const jOffset = scene.jCutOffset || 0;
+      const lOffset = scene.lCutOffset || 0;
 
-      const audioStart = Math.max(0, currentTimelineTime + jOffset);
-      const audioDuration = clipDuration + Math.abs(jOffset) + lOffset;
+      const { audioStart, audioDuration } = calculateCutOverlapBounds(
+        currentTimelineTime,
+        clipDuration,
+        jOffset,
+        lOffset
+      );
 
       const audioClip: AudioClipItem = {
         id: `aclip_env_${scene.sceneId}`,
