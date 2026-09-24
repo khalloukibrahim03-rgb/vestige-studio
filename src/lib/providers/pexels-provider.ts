@@ -33,9 +33,25 @@ export class PexelsProvider implements MediaProvider {
         return this.getFallbackAssets(query);
       }
 
-      return data.videos.map((v: any) => {
+      interface PexelsVideoFile {
+        quality?: string;
+        width?: number;
+        height?: number;
+        link?: string;
+      }
+
+      interface PexelsVideoResult {
+        id: number | string;
+        url?: string;
+        duration?: number;
+        image?: string;
+        user?: { name?: string };
+        video_files?: PexelsVideoFile[];
+      }
+
+      return data.videos.map((v: PexelsVideoResult) => {
         const files = v.video_files || [];
-        const bestFile = files.find((f: any) => f.quality === "hd" && f.width >= 1080) || files[0] || {};
+        const bestFile = files.find((f: PexelsVideoFile) => (f.quality === "hd" && (f.width ?? 0) >= 1080)) || files[0] || {};
 
         return {
           provider: this.name,
