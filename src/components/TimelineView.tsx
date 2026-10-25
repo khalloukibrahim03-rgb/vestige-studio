@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CinematicTimeline, VideoClipItem, AudioClipItem } from "@/lib/editing/types";
-import { Play, Pause, Volume2, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
+import { Play, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
 
 interface TimelineViewProps {
   timeline: CinematicTimeline;
@@ -12,9 +12,9 @@ interface TimelineViewProps {
 }
 
 export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering }: TimelineViewProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [, setIsPlaying] = useState(false);
   const [selectedClipId, setSelectedClipId] = useState<string | null>(timeline.videoTrack.clips[0]?.id || null);
-  const [currentTime, setCurrentTime] = useState(0);
+  const [, setCurrentTime] = useState(0);
 
   const selectedClip = timeline.videoTrack.clips.find((c) => c.id === selectedClipId);
 

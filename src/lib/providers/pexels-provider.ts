@@ -33,9 +33,9 @@ export class PexelsProvider implements MediaProvider {
         return this.getFallbackAssets(query);
       }
 
-      return data.videos.map((v: any) => {
+      return data.videos.map((v: { id: number; url: string; video_files?: { quality: string; width: number; link: string; height: number }[]; duration?: number; image?: string; user?: { name: string } }) => {
         const files = v.video_files || [];
-        const bestFile = files.find((f: any) => f.quality === "hd" && f.width >= 1080) || files[0] || {};
+        const bestFile = files.find((f: { quality: string; width: number }) => f.quality === "hd" && f.width >= 1080) || files[0] || { link: "", width: 1920, height: 1080 };
 
         return {
           provider: this.name,

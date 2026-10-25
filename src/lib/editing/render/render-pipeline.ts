@@ -12,7 +12,7 @@ export interface RenderProgress {
   message: string;
   outputPath?: string;
   error?: string;
-  diagnostics?: any;
+  diagnostics?: unknown;
 }
 
 export type ProgressCallback = (progress: RenderProgress) => void;
@@ -100,7 +100,7 @@ export class ModularRenderPipeline implements IRenderBackend {
       });
 
       // Collect audio inputs
-      const audioInputs: { path: string; track: string; clipIndex: number; clip: any }[] = [];
+      const audioInputs: { path: string; track: string; clipIndex: number; clip: unknown }[] = [];
       preparedAudioTracks.forEach((track) => {
         track.clips.forEach((clip, idx) => {
           command.input(clip.localFilePath!);
@@ -134,9 +134,10 @@ export class ModularRenderPipeline implements IRenderBackend {
       if (audioInputs.length > 0) {
         audioInputs.forEach((item, idx) => {
           const inputIdx = preparedVideoClips.length + idx;
-          const delayMs = Math.round(Math.max(0, item.clip.timelineStart) * 1000);
-          const volume = item.clip.volume ?? 0.8;
-          complexFilter.push(`[${inputIdx}:a]atrim=0:${item.clip.duration},asetpts=PTS-STARTPTS,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`);
+          const clip = item.clip as { timelineStart: number; duration: number; volume?: number };
+          const delayMs = Math.round(Math.max(0, clip.timelineStart) * 1000);
+          const volume = clip.volume ?? 0.8;
+          complexFilter.push(`[${inputIdx}:a]atrim=0:${clip.duration},asetpts=PTS-STARTPTS,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`);
         });
 
         const concatAudioInputs = audioInputs.map((_, idx) => `[a${idx}]`).join("");
