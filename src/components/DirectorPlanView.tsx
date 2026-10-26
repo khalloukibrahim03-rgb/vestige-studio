@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { DirectorPlan, DirectorScene } from "@/lib/schemas/director-plan";
 import { MediaAsset } from "@/lib/providers/types";
-import { Sparkles, ChevronDown, ChevronUp, Eye, Music, Palette, Film, Award, HelpCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Music, Palette, Film, Award, HelpCircle } from "lucide-react";
 
 interface DirectorPlanViewProps {
   plan: DirectorPlan;
-  selectedAssets?: { sceneId: string; video: MediaAsset; sound?: any }[];
+  selectedAssets?: { sceneId: string; video: MediaAsset; sound?: unknown }[];
 }
 
 export function DirectorPlanView({ plan, selectedAssets = [] }: DirectorPlanViewProps) {
