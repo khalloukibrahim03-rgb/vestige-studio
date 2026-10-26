@@ -47,8 +47,9 @@ export function getFFmpegDiagnostics(): FFmpegDiagnostics {
       ffmpegDetected = true;
       version = firstLine.trim();
     }
-  } catch (err: any) {
-    console.warn("[FFmpeg Resolver] Execution test failed:", err?.message || err);
+  } catch (err) {
+    const errMessage = err instanceof Error ? err.message : String(err);
+    console.warn("[FFmpeg Resolver] Execution test failed:", errMessage);
   }
 
   return {
