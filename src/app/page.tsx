@@ -7,7 +7,7 @@ import { PromptInput } from "@/components/PromptInput";
 import { DirectorPlanView } from "@/components/DirectorPlanView";
 import { TimelineView } from "@/components/TimelineView";
 import { ProjectData } from "@/lib/services/project-store";
-import { Sparkles, Download, RefreshCw, CheckCircle2, Film, Wand2 } from "lucide-react";
+import { Download, RefreshCw, CheckCircle2, Wand2 } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "director" | "timeline" | "export">("dashboard");
@@ -39,8 +39,9 @@ export default function Home() {
 
       setCurrentProject(data.project);
       setActiveTab("director");
-    } catch (err: any) {
-      alert(`Error creating project: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create project";
+      alert(`Error creating project: ${message}`);
     } finally {
       setIsLoading(false);
       setStatusMessage("");
@@ -62,8 +63,9 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || "Failed to trigger render");
 
       setCurrentProject(data.project);
-    } catch (err: any) {
-      alert(`Render error: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Render failed";
+      alert(`Render error: ${message}`);
       setIsRendering(false);
     }
   };
