@@ -1,5 +1,14 @@
 import { SoundProvider, SoundAsset } from "./types";
 
+interface FreesoundResultItem {
+  id: number;
+  name: string;
+  previews?: Record<string, string>;
+  duration?: number;
+  license?: string;
+  username?: string;
+}
+
 export class FreesoundProvider implements SoundProvider {
   readonly name = "Freesound";
   private apiKey: string | undefined;
@@ -28,7 +37,7 @@ export class FreesoundProvider implements SoundProvider {
         return this.getFallbackSounds(query);
       }
 
-      return data.results.map((s: any) => ({
+      return data.results.map((s: FreesoundResultItem) => ({
         provider: this.name,
         assetId: String(s.id),
         title: s.name,
