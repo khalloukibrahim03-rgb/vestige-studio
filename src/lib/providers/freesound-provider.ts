@@ -28,7 +28,16 @@ export class FreesoundProvider implements SoundProvider {
         return this.getFallbackSounds(query);
       }
 
-      return data.results.map((s: any) => ({
+      interface FreesoundResult {
+        id: number;
+        name: string;
+        previews?: Record<string, string>;
+        duration?: number;
+        license?: string;
+        username?: string;
+      }
+
+      return data.results.map((s: FreesoundResult) => ({
         provider: this.name,
         assetId: String(s.id),
         title: s.name,
