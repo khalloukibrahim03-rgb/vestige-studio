@@ -28,14 +28,30 @@ export class PexelsProvider implements MediaProvider {
         return this.getFallbackAssets(query);
       }
 
-      const data = await res.json();
+      interface PexelsVideoFile {
+        quality?: string;
+        width?: number;
+        height?: number;
+        link?: string;
+      }
+
+      interface PexelsVideoItem {
+        id: number;
+        url: string;
+        image?: string;
+        duration?: number;
+        user?: { name?: string };
+        video_files?: PexelsVideoFile[];
+      }
+
+      const data = (await res.json()) as { videos?: PexelsVideoItem[] };
       if (!data.videos || data.videos.length === 0) {
         return this.getFallbackAssets(query);
       }
 
-      return data.videos.map((v: any) => {
+      return data.videos.map((v) => {
         const files = v.video_files || [];
-        const bestFile = files.find((f: any) => f.quality === "hd" && f.width >= 1080) || files[0] || {};
+        const bestFile = files.find((f) => f.quality === "hd" && (f.width ?? 0) >= 1080) || files[0] || {};
 
         return {
           provider: this.name,
