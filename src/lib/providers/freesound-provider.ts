@@ -23,12 +23,21 @@ export class FreesoundProvider implements SoundProvider {
         return this.getFallbackSounds(query);
       }
 
-      const data = await res.json();
+      interface FreesoundResultItem {
+        id: number;
+        name: string;
+        previews?: { "preview-hq-mp3"?: string; "preview-lq-mp3"?: string };
+        duration?: number;
+        license?: string;
+        username?: string;
+      }
+
+      const data = (await res.json()) as { results?: FreesoundResultItem[] };
       if (!data.results || data.results.length === 0) {
         return this.getFallbackSounds(query);
       }
 
-      return data.results.map((s: any) => ({
+      return data.results.map((s) => ({
         provider: this.name,
         assetId: String(s.id),
         title: s.name,
