@@ -1,8 +1,12 @@
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import fs from "fs/promises";
-import { CinematicTimeline, ExportPreset } from "../types";
-import { buildCropFilter, buildScaleFilter, buildColorFilter } from "./filter-generator";
+import { CinematicTimeline, ExportPreset, VideoClipItem } from "../types";
+import { buildCropFilter } from "../crop";
+import { buildScaleFilter } from "../scale";
+import { buildColorFilter } from "../color";
+import { buildMotionFilter } from "../motion";
+import { buildTransitionFilter } from "../transitions";
 import { getFFmpegPath, getFFmpegDiagnostics } from "./ffmpeg-resolver";
 import { IRenderBackend } from "./backend";
 
@@ -62,11 +66,14 @@ export class ModularRenderPipeline implements IRenderBackend {
 
     report("downloading_assets", 10, `Caching media and sound assets locally... (FFmpeg ${diagnostics.version?.slice(0, 30)})`);
 
-    // 1. Ensure all video and audio assets are saved locally
-    const preparedVideoClips = await Promise.all(
+    // 1. Ensure all video and audio assets are saved locally (except virtual generators like "black")
+    const preparedVideoClips: (VideoClipItem & { isGenerator?: boolean })[] = await Promise.all(
       timeline.videoTrack.clips.map(async (clip, idx) => {
+        if (clip.sourceUrl === "black" || clip.sourceUrl.startsWith("color:")) {
+          return { ...clip, isGenerator: true, localFilePath: undefined };
+        }
         const localPath = await this.ensureLocalAsset(clip.sourceUrl, `video_${idx}_${clip.id}.mp4`);
-        return { ...clip, localFilePath: localPath };
+        return { ...clip, isGenerator: false, localFilePath: localPath };
       })
     );
 
@@ -92,58 +99,97 @@ export class ModularRenderPipeline implements IRenderBackend {
     return new Promise((resolve, reject) => {
       const command = ffmpeg();
 
-      // Inputs array
-      const videoInputs: string[] = [];
+      // Register file inputs and track their index
+      const inputIndices = new Map<string, number>();
+      let nextInputIndex = 0;
+
       preparedVideoClips.forEach((clip) => {
-        command.input(clip.localFilePath!);
-        videoInputs.push(clip.localFilePath!);
+        if (!clip.isGenerator && clip.localFilePath) {
+          command.input(clip.localFilePath);
+          inputIndices.set(clip.id, nextInputIndex++);
+        }
       });
 
       // Collect audio inputs
-      const audioInputs: { path: string; track: string; clipIndex: number; clip: any }[] = [];
+      const audioInputs: { path: string; track: string; clipIndex: number; clip: any; inputIdx: number }[] = [];
       preparedAudioTracks.forEach((track) => {
+        if (track.muted) return;
         track.clips.forEach((clip, idx) => {
           command.input(clip.localFilePath!);
-          audioInputs.push({ path: clip.localFilePath!, track: track.id, clipIndex: idx, clip });
+          const inputIdx = nextInputIndex++;
+          audioInputs.push({ path: clip.localFilePath!, track: track.id, clipIndex: idx, clip, inputIdx });
         });
       });
 
       const complexFilter: string[] = [];
 
       // Video processing pipeline
-      // Process each video clip: trim -> crop -> scale -> color -> pts
       preparedVideoClips.forEach((clip, i) => {
-        const trimFilter = `[${i}:v]trim=start=${clip.startInSource}:duration=${clip.duration},setpts=PTS-STARTPTS`;
-        const crop = buildCropFilter(1920, 1080, preset.width, preset.height, clip.transform);
-        const scale = buildScaleFilter(preset.width, preset.height);
-        const colorFilters = buildColorFilter(clip.color);
+        if (clip.isGenerator) {
+          // Pure black slug generated directly via FFmpeg color source with identical SAR, fps, and format
+          complexFilter.push(
+            `color=c=black:s=${preset.width}x${preset.height}:r=${preset.fps}:d=${clip.duration},setsar=1,format=yuv420p[v${i}]`
+          );
+        } else {
+          const inputIdx = inputIndices.get(clip.id)!;
+          const trimFilter = `[${inputIdx}:v]trim=start=${clip.startInSource}:duration=${clip.duration},setpts=PTS-STARTPTS`;
+          const crop = buildCropFilter(1920, 1080, preset.width, preset.height, clip.transform);
+          const scale = buildScaleFilter(preset.width, preset.height);
+          const colorFilters = buildColorFilter(clip.color);
+          const transitionFilters = buildTransitionFilter({
+            type: clip.transitionIn.type,
+            duration: clip.transitionIn.duration,
+            clipDuration: clip.duration,
+          });
 
-        let chain = `${trimFilter},${crop},${scale}`;
-        if (colorFilters.length > 0) {
-          chain += `,${colorFilters.join(",")}`;
+          const filterElements = [trimFilter, crop, scale];
+          if (colorFilters.length > 0) {
+            filterElements.push(...colorFilters);
+          }
+          if (clip.motion && clip.motion.type !== "none") {
+            const motionFilter = buildMotionFilter(clip.motion.type, preset.fps, clip.duration, preset.width, preset.height);
+            if (motionFilter) filterElements.push(motionFilter);
+          }
+          if (transitionFilters.length > 0) {
+            filterElements.push(...transitionFilters);
+          }
+
+          // Enforce square pixel aspect ratio, constant frame rate, and pixel format for seamless concat
+          filterElements.push(`setsar=1`, `fps=${preset.fps}`, `format=yuv420p`);
+
+          complexFilter.push(`${filterElements.join(",")}[v${i}]`);
         }
-
-        complexFilter.push(`${chain}[v${i}]`);
       });
 
       // Concatenate video clips sequentially
       const concatVideoInputs = preparedVideoClips.map((_, i) => `[v${i}]`).join("");
       complexFilter.push(`${concatVideoInputs}concat=n=${preparedVideoClips.length}:v=1:a=0[v_concat]`);
 
-      // Audio processing & mixing
+      // Audio processing & mixing with full duration preservation
+      const totalDur = timeline.totalDuration.toFixed(2);
       if (audioInputs.length > 0) {
         audioInputs.forEach((item, idx) => {
-          const inputIdx = preparedVideoClips.length + idx;
           const delayMs = Math.round(Math.max(0, item.clip.timelineStart) * 1000);
           const volume = item.clip.volume ?? 0.8;
-          complexFilter.push(`[${inputIdx}:a]atrim=0:${item.clip.duration},asetpts=PTS-STARTPTS,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`);
+          const fadeIn = item.clip.fadeInDuration || 0.3;
+          const fadeOut = item.clip.fadeOutDuration || 0.4;
+          const fadeOutStart = Math.max(0, item.clip.duration - fadeOut).toFixed(2);
+
+          complexFilter.push(
+            `[${item.inputIdx}:a]atrim=0:${item.clip.duration.toFixed(2)},asetpts=PTS-STARTPTS,afade=t=in:st=0:d=${fadeIn},afade=t=out:st=${fadeOutStart}:d=${fadeOut},volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`
+          );
         });
 
-        const concatAudioInputs = audioInputs.map((_, idx) => `[a${idx}]`).join("");
-        complexFilter.push(`${concatAudioInputs}amix=inputs=${audioInputs.length}:duration=first:dropout_transition=2[a_mixed]`);
+        // Add silent base pad matching total timeline duration to ensure amix never truncates early
+        complexFilter.push(`aevalsrc=0:d=${totalDur}:s=48000[a_base]`);
+
+        const allAudioInputs = `[a_base]` + audioInputs.map((_, idx) => `[a${idx}]`).join("");
+        complexFilter.push(
+          `${allAudioInputs}amix=inputs=${audioInputs.length + 1}:duration=longest:dropout_transition=2,atrim=0:${totalDur},asetpts=PTS-STARTPTS[a_mixed]`
+        );
       } else {
-        // Fallback quiet audio if no track provided
-        complexFilter.push(`anullsrc=channel_layout=stereo:sample_rate=48000[a_mixed]`);
+        // Fallback quiet audio if no audio clips
+        complexFilter.push(`aevalsrc=0:d=${totalDur}:s=48000[a_mixed]`);
       }
 
       command
@@ -160,7 +206,7 @@ export class ModularRenderPipeline implements IRenderBackend {
           `-c:a ${preset.codecAudio}`,
           `-b:a ${preset.audioBitrate}`,
           `-ar 48000`,
-          `-shortest`
+          `-t ${totalDur}`
         ])
         .output(outputPath)
         .on("start", (cmd) => {

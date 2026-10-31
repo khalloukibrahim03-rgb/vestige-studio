@@ -1,6 +1,7 @@
 import ffmpegStatic from "ffmpeg-static";
 import { execSync } from "child_process";
 import fs from "fs";
+import path from "path";
 
 export interface FFmpegDiagnostics {
   ffmpegDetected: boolean;
@@ -14,8 +15,9 @@ export interface FFmpegDiagnostics {
  * Dynamically resolves the FFmpeg executable path.
  * Strategy order:
  * 1. Process environment override (FFMPEG_PATH)
- * 2. Static bundled binary via `ffmpeg-static` (works seamlessly in Vercel Serverless / Node runtimes)
- * 3. System PATH fallback ("ffmpeg")
+ * 2. Static bundled binary via `ffmpeg-static` (handles ESM default export differences)
+ * 3. Direct node_modules path (node_modules/ffmpeg-static/ffmpeg)
+ * 4. System PATH fallback ("ffmpeg")
  */
 export function getFFmpegPath(): string {
   // 1. Explicit env override
@@ -24,11 +26,18 @@ export function getFFmpegPath(): string {
   }
 
   // 2. Bundled static binary from ffmpeg-static
-  if (ffmpegStatic && typeof ffmpegStatic === "string" && fs.existsSync(ffmpegStatic)) {
-    return ffmpegStatic;
+  const rawStatic = typeof ffmpegStatic === "string" ? ffmpegStatic : (ffmpegStatic as any)?.default;
+  if (rawStatic && typeof rawStatic === "string" && fs.existsSync(rawStatic)) {
+    return rawStatic;
   }
 
-  // 3. Fallback to system ffmpeg command
+  // 3. Direct node_modules path
+  const localNodeModulesFfmpeg = path.join(process.cwd(), "node_modules", "ffmpeg-static", "ffmpeg");
+  if (fs.existsSync(localNodeModulesFfmpeg)) {
+    return localNodeModulesFfmpeg;
+  }
+
+  // 4. Fallback to system ffmpeg command
   return "ffmpeg";
 }
 
@@ -51,11 +60,13 @@ export function getFFmpegDiagnostics(): FFmpegDiagnostics {
     console.warn("[FFmpeg Resolver] Execution test failed:", err?.message || err);
   }
 
+  const rawStatic = typeof ffmpegStatic === "string" ? ffmpegStatic : (ffmpegStatic as any)?.default;
+
   return {
     ffmpegDetected,
     executablePath: resolvedPath,
     version,
-    isStaticBundle: typeof ffmpegStatic === "string" && resolvedPath === ffmpegStatic,
+    isStaticBundle: resolvedPath === rawStatic || resolvedPath.includes("ffmpeg-static"),
     environment: process.env.VERCEL ? "Vercel Serverless" : process.env.NODE_ENV || "development",
   };
 }

@@ -10,8 +10,29 @@ export class PexelsProvider implements MediaProvider {
   }
 
   async searchVideos(query: string, options?: { perPage?: number; minDuration?: number }): Promise<MediaAsset[]> {
+    const q = query.toLowerCase();
+
+    // Check if query is for black screen slug generator
+    if (q.includes("black screen") || q.includes("darkness slug") || q.includes("black slug")) {
+      return [
+        {
+          provider: "VESTIGE Native Generator",
+          assetId: "black_slug",
+          title: "Cinematic Black Slug Generator",
+          url: "black",
+          downloadUrl: "black",
+          previewUrl: "",
+          duration: 10,
+          width: 1080,
+          height: 1920,
+          license: "VESTIGE Native Black Generator",
+          author: "VESTIGE Studio",
+        },
+      ];
+    }
+
     if (!this.apiKey) {
-      console.warn("PEXELS_API_KEY is not set. Falling back to sample assets.");
+      console.warn("PEXELS_API_KEY is not set. Falling back to sample assets for query:", query);
       return this.getFallbackAssets(query);
     }
 
@@ -73,13 +94,34 @@ export class PexelsProvider implements MediaProvider {
       };
     }
 
+    // If candidate is the native black generator
+    if (candidates[0].downloadUrl === "black") {
+      return {
+        ...candidates[0],
+        score: {
+          storyRelevance: 99,
+          composition: 98,
+          movement: 95,
+          lighting: 99,
+          continuity: 98,
+          overall: 98,
+        },
+      };
+    }
+
     const scoredCandidates = candidates.map((asset, index) => {
-      const baseRelevance = 90 - index * 3;
+      const baseRelevance = 92 - index * 3;
       const composition = asset.width >= 1920 ? 94 : 85;
-      const movement = asset.duration >= scene.duration ? 92 : 80;
-      const lighting = 90;
-      const continuity = 93;
-      const overall = Math.round((baseRelevance * 0.3) + (composition * 0.25) + (movement * 0.2) + (lighting * 0.15) + (continuity * 0.1));
+      const movement = asset.duration >= scene.duration ? 93 : 82;
+      const lighting = 91;
+      const continuity = 94;
+      const overall = Math.round(
+        baseRelevance * 0.3 +
+        composition * 0.25 +
+        movement * 0.2 +
+        lighting * 0.15 +
+        continuity * 0.1
+      );
 
       return {
         ...asset,
@@ -170,16 +212,16 @@ export class PexelsProvider implements MediaProvider {
       }
     ];
 
-    if (q.includes("sunlight") || q.includes("surface") || q.includes("ray")) {
+    if (q.includes("sunlight") || q.includes("ray") || q.includes("churn") || q.includes("underwater surface")) {
       return [samplePool[1], samplePool[0], samplePool[2]];
     }
     if (q.includes("life") || q.includes("organism") || q.includes("jellyfish") || q.includes("creature")) {
       return [samplePool[3], samplePool[2], samplePool[4]];
     }
-    if (q.includes("rov") || q.includes("submersible") || q.includes("abyss") || q.includes("floor")) {
+    if (q.includes("rov") || q.includes("submersible") || q.includes("abyss") || q.includes("seafloor") || q.includes("benthic") || q.includes("sediment")) {
       return [samplePool[4], samplePool[3], samplePool[2]];
     }
-    if (q.includes("deep") || q.includes("darkness")) {
+    if (q.includes("deep") || q.includes("darkness") || q.includes("midnight")) {
       return [samplePool[2], samplePool[3], samplePool[1]];
     }
 
