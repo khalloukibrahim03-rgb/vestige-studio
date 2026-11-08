@@ -17,11 +17,15 @@ export async function POST(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    if (body.timeline) {
+      project.timeline = body.timeline;
+    }
+
     if (!project.timeline) {
       return NextResponse.json({ error: "Timeline is not compiled yet" }, { status: 400 });
     }
 
-    const body = await req.json().catch(() => ({}));
     const presetId = body.presetId || "SHORT_HIGH";
     const exportPreset = EXPORT_PRESETS[presetId] || EXPORT_PRESETS.SHORT_HIGH;
 

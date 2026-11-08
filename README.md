@@ -1,64 +1,89 @@
 # VESTIGE STUDIO — Cinematic AI Video Editing Engine
 
-VESTIGE STUDIO is an AI-assisted cinematic video editing engine designed for high-quality documentary Shorts and long-form videos.
+VESTIGE STUDIO is an AI-assisted cinematic video editing platform designed for high-quality documentary Shorts and long-form visual stories.
 
-Unlike basic AI video generators that simply stitch clips together, VESTIGE STUDIO operates as an **AI Director & Editing Suite**, evaluating shot composition, timing, audio continuity (J-cuts and L-cuts), and color grading to produce intentionally edited cinematic stories.
+Unlike generic AI video generators that simply stitch random clips together into slideshows, VESTIGE STUDIO operates as an **AI Director and Non-Linear Editing Suite**. Every cut has a narrative reason, every shot has an intentional purpose, timing follows organic emotional rhythm, audio continuity is preserved with J-cuts and L-cuts, and the color palette is graded to serve the story.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Architecture & Core Capabilities
 
-1. **AI Director & Editorial Intelligence**: Powered by Gemini, the AI Director formulates structured Director Plans with scene-by-scene narrative purpose and detailed reasoning (*WHY THIS SHOT*, *WHY THIS DURATION*, *WHY THIS CUT*, *WHY THIS SOUND*, *WHY THIS COLOR*).
-2. **Intelligent Shot Selection**: Automated searching and multi-parameter scoring (story relevance, composition, camera movement, lighting, continuity) for stock footage from **Pexels**.
-3. **Natural Acoustic Soundscapes**: Automated sound selection from **Freesound** for ambient hydrophone audio and environmental soundscapes.
-4. **Cinematic NLE Engine**:
-   - Modular timeline data model supporting tracks (V1, A1, A2, A3, A4).
-   - Audio J-cuts (audio lead-in) and L-cuts (audio tailing).
-   - Smart 9:16 vertical video conversion with center-of-interest cropping.
-   - Cinematic color presets (*Natural Documentary*, *Deep Ocean*, *Cold Scientific*, *Night*, *Warm Memory*, *Neutral*).
-5. **Vercel-Compatible FFmpeg Render Pipeline**:
-   - Dynamic path resolution (`getFFmpegPath()`) with bundled `ffmpeg-static` for serverless environments.
-   - Modular filtergraph generation (`buildCropFilter`, `buildScaleFilter`, `buildColorFilter`, `buildAudioFilter`).
-   - `IRenderBackend` interface for seamless future delegation to external worker infrastructure (AWS Lambda, Cloud Run, Modal).
-6. **Dark Obsidian Interface**: Obsidian dark surfaces (`#0a0b0e`), platinum typography, gold accents (`#c5a059`), and glass panels.
-7. **Zero-Lock Fallback System**: Full functionality out of the box with built-in curated cinematic media and offline AI models when live API keys are not provided.
+```
+VESTIGE STUDIO
+├── 1. AI Director (Gemini 2.5 Flash)
+│   ├── Structured Director Plan (Zod-validated JSON)
+│   └── Editorial Reasoning (WHY THIS SHOT, DURATION, CUT, TRANSITION, SOUND, COLOR)
+├── 2. Intelligent Sourcing Providers
+│   ├── PexelsProvider: Multi-parameter candidate scoring (Story, Composition, Motion, Lighting, Continuity)
+│   └── FreesoundProvider: Natural acoustic soundscapes & hydrophone ambience
+├── 3. Cinematic NLE Engine (/src/lib/editing)
+│   ├── /timeline: Multi-track representation (V1, A1 Environment, A2 Secondary, A3 Voiceover, A4 Music)
+│   ├── /crop: Smart 9:16 vertical crop with center-of-interest safe zones
+│   ├── /scale: High-quality scaling and pillarbox/letterbox padding
+│   ├── /motion: Subtle Ken Burns moves (push-in, pull-out, pan)
+│   ├── /cuts: Motivated cuts, match cuts, action cuts, visual continuity cuts
+│   ├── /transitions: Crossfade, fade-to-black, dip-to-black
+│   ├── /timing: Dynamic shot duration curves based on documentary shot types
+│   ├── /color: Presets (Natural Documentary, Deep Ocean, Cold Scientific, Night, Warm Memory, Neutral) + live grading
+│   ├── /audio: J-cut (lead-in) and L-cut (tailing), track gain, mute/solo, and continuous audio mixing
+│   └── /render: Modular FFmpeg complex filter pipeline, static binary resolver, IRenderBackend abstraction
+└── 4. Realtime Studio Interface
+    ├── Realtime preview player with scrubbing, seeking, volume & fullscreen
+    ├── Interactive clip trim, re-order, transition, and live color matrix adjustments
+    └── Dark obsidian aesthetic (#0a0b0e), platinum typography, and gold accents (#c5a059)
+```
+
+---
+
+## 🎬 Official Benchmark Concept: "THE DEEP IS NOT EMPTY"
+
+The platform includes an automated 1-click test benchmark:
+- **Concept**: *THE DEEP IS NOT EMPTY* (~48s oceanic descent).
+- **Progression**:
+  1. Open vast ocean surface waves under sky (establishing scale & human isolation).
+  2. Sinking beneath the surface threshold with sunlight rays piercing water (audio J-cut).
+  3. Gradual disappearance of sunlight into deep shadowy twilight (crossfade into cold scientific palette).
+  4. Sudden discovery of bioluminescent deep sea life in pitch darkness (motivated cut & macro detail).
+  5. Scientific ROV research submersible scanning the abyssal floor with searchlights and sonar audio.
+  6. Final dip into abyssal silence.
 
 ---
 
 ## 🚀 Deployment & Vercel Requirements
 
 ### Vercel Serverless Configuration
-- FFmpeg binary is automatically bundled and resolved via `ffmpeg-static`.
-- No system-level `/usr/bin/ffmpeg` installation required on Vercel.
-- Max duration settings for Vercel Serverless Functions (`maxDuration = 60`) are configured for render API endpoints.
-- Diagnostic endpoint `/api/diagnostics` reports FFmpeg version, resolution status, and environment details.
+- **Dynamic FFmpeg Resolution**: FFmpeg is dynamically resolved via `ffmpeg-static` (`getFFmpegPath()`). No manual system package installation (`apt-get install ffmpeg`) is needed on Vercel.
+- **Vercel Serverless Max Duration**: Render API routes configure `maxDuration = 60` to accommodate complete transcoding runs.
+- **Server Diagnostics**: The `/api/diagnostics` endpoint verifies FFmpeg detection, path resolution, binary version, and platform specs.
 
-### Optional Custom FFmpeg Path
-If deploying on custom infrastructure, set `FFMPEG_PATH` in `.env`:
+### Custom Server / Docker Deployment
+If deploying on a custom VPS, Docker container, or Kubernetes, specify your system binary:
 ```env
-FFMPEG_PATH=/custom/path/to/ffmpeg
+FFMPEG_PATH=/usr/bin/ffmpeg
 ```
 
 ---
 
-## 💻 Quick Start & Development
+## 💻 Local Development Setup
 
 ### Prerequisites
 - Node.js 18+
+- npm or yarn
 
 ### Installation
 
-1. Install dependencies:
+1. Clone repository and install dependencies:
    ```bash
    npm install
    ```
 
-2. Copy environment file and configure API keys (optional):
+2. Configure environment variables (optional):
    ```bash
    cp .env.example .env.local
    ```
+   *Note: If no API keys are provided, VESTIGE STUDIO automatically operates with zero-lock fallback mode using curated high-resolution sample footage and offline AI director plans.*
 
-3. Run local development server:
+3. Start development server:
    ```bash
    npm run dev
    ```
@@ -67,36 +92,22 @@ FFMPEG_PATH=/custom/path/to/ffmpeg
 
 ---
 
-## 🎥 Benchmark Test Concept: "THE DEEP IS NOT EMPTY"
+## 🧪 Testing & Verification
 
-VESTIGE STUDIO includes a 1-click test benchmark:
-- **Concept**: *THE DEEP IS NOT EMPTY* (48-second oceanic descent).
-- **Flow**: Idea → Gemini Director Plan → Pexels Stock Sourcing → Freesound Audio Sourcing → Timeline Construction → FFmpeg Render → Playable MP4 Export.
-
----
-
-## 🏗 Architecture Overview
-
+Run provider abstraction tests:
+```bash
+npx tsx src/lib/providers/test-providers.ts
 ```
-src/
-  app/                    # Next.js App Router (Pages & API Routes)
-    api/diagnostics/      # Server diagnostics endpoint
-    api/projects/         # Project creation & render trigger routes
-    api/videos/           # Video file streaming route
-  components/             # UI Components (Header, Settings, PromptInput, DirectorPlanView, TimelineView)
-  lib/
-    editing/              # Modular Editing Engine
-      color/              # Color presets & matrix adjustments
-      presets/            # Export presets (SHORT_HIGH, YOUTUBE_1080P, etc.)
-      render/             # FFmpeg complex filtergraph generators, resolver, backend abstraction & pipeline runner
-      timeline/           # Timeline compiler (J/L-cuts, tracks)
-      types.ts            # Timeline & Clip data types
-    providers/            # Provider Abstraction Layer
-      gemini-director-provider.ts  # Gemini AI Director provider & fallback
-      pexels-provider.ts           # Pexels stock video provider & fallback
-      freesound-provider.ts        # Freesound soundscape provider & fallback
-    schemas/              # Zod validation schemas for AI Director JSON
-    services/             # In-memory project persistence store
+
+Run end-to-end timeline compilation and FFmpeg rendering test:
+```bash
+npx tsx src/lib/editing/test-editing-engine.ts
+```
+
+Run TypeScript and Next.js production build:
+```bash
+npx tsc --noEmit
+npm run build
 ```
 
 ---

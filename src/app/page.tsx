@@ -7,6 +7,7 @@ import { PromptInput } from "@/components/PromptInput";
 import { DirectorPlanView } from "@/components/DirectorPlanView";
 import { TimelineView } from "@/components/TimelineView";
 import { ProjectData } from "@/lib/services/project-store";
+import { CinematicTimeline } from "@/lib/editing/types";
 import { Sparkles, Download, RefreshCw, CheckCircle2, Film, Wand2 } from "lucide-react";
 
 export default function Home() {
@@ -47,6 +48,15 @@ export default function Home() {
     }
   };
 
+  const handleUpdateTimeline = (updatedTimeline: CinematicTimeline) => {
+    if (!currentProject) return;
+    setCurrentProject({
+      ...currentProject,
+      timeline: updatedTimeline,
+      renderedVideoUrl: undefined, // Invalidate old render on edit
+    });
+  };
+
   const handleRenderRequest = async () => {
     if (!currentProject) return;
 
@@ -55,7 +65,7 @@ export default function Home() {
       const res = await fetch(`/api/projects/${currentProject.id}/render`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ presetId: "SHORT_HIGH" }),
+        body: JSON.stringify({ presetId: "SHORT_HIGH", timeline: currentProject.timeline }),
       });
 
       const data = await res.json();
@@ -147,6 +157,7 @@ export default function Home() {
             videoUrl={currentProject.renderedVideoUrl}
             onRenderRequest={handleRenderRequest}
             isRendering={isRendering}
+            onUpdateTimeline={handleUpdateTimeline}
           />
         )}
 

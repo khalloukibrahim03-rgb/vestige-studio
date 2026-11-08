@@ -2,7 +2,8 @@ import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import fs from "fs/promises";
 import { CinematicTimeline, ExportPreset } from "../types";
-import { buildCropFilter, buildScaleFilter, buildColorFilter } from "./filter-generator";
+import { buildClipFilterChain } from "./filter-generator";
+import { buildAudioClipFilter } from "../audio/audio";
 import { getFFmpegPath, getFFmpegDiagnostics } from "./ffmpeg-resolver";
 import { IRenderBackend } from "./backend";
 
@@ -88,20 +89,22 @@ export class ModularRenderPipeline implements IRenderBackend {
     const outputFilename = `vestige_render_${timeline.id}_${timestamp}.mp4`;
     const outputPath = path.join(this.outputDir, outputFilename);
 
-    // 2. Build FFmpeg command using filtergraph
+    const totalDuration = timeline.totalDuration > 0
+      ? timeline.totalDuration
+      : preparedVideoClips.reduce((acc, c) => acc + c.duration, 0);
+
     return new Promise((resolve, reject) => {
       const command = ffmpeg();
 
       // Inputs array
-      const videoInputs: string[] = [];
       preparedVideoClips.forEach((clip) => {
         command.input(clip.localFilePath!);
-        videoInputs.push(clip.localFilePath!);
       });
 
       // Collect audio inputs
       const audioInputs: { path: string; track: string; clipIndex: number; clip: any }[] = [];
       preparedAudioTracks.forEach((track) => {
+        if (track.muted) return; // Honor mute settings
         track.clips.forEach((clip, idx) => {
           command.input(clip.localFilePath!);
           audioInputs.push({ path: clip.localFilePath!, track: track.id, clipIndex: idx, clip });
@@ -110,40 +113,38 @@ export class ModularRenderPipeline implements IRenderBackend {
 
       const complexFilter: string[] = [];
 
-      // Video processing pipeline
-      // Process each video clip: trim -> crop -> scale -> color -> pts
+      // 1. Video processing pipeline using modular filter chain
+      // Process each video clip: trim -> crop -> scale -> motion -> transitions -> color -> standardization
       preparedVideoClips.forEach((clip, i) => {
-        const trimFilter = `[${i}:v]trim=start=${clip.startInSource}:duration=${clip.duration},setpts=PTS-STARTPTS`;
-        const crop = buildCropFilter(1920, 1080, preset.width, preset.height, clip.transform);
-        const scale = buildScaleFilter(preset.width, preset.height);
-        const colorFilters = buildColorFilter(clip.color);
-
-        let chain = `${trimFilter},${crop},${scale}`;
-        if (colorFilters.length > 0) {
-          chain += `,${colorFilters.join(",")}`;
-        }
-
-        complexFilter.push(`${chain}[v${i}]`);
+        const chain = buildClipFilterChain(i, clip, preset, `v${i}`);
+        complexFilter.push(chain);
       });
 
       // Concatenate video clips sequentially
       const concatVideoInputs = preparedVideoClips.map((_, i) => `[v${i}]`).join("");
       complexFilter.push(`${concatVideoInputs}concat=n=${preparedVideoClips.length}:v=1:a=0[v_concat]`);
 
-      // Audio processing & mixing
+      // 2. Audio mixing with full-timeline silent base pad to guarantee audio continuity
+      // A base silent pad matching the total timeline duration prevents audio cutting off early
+      complexFilter.push(`aevalsrc=0:d=${totalDuration}:s=48000:c=stereo[a_silence_base]`);
+
+      const audioStreamLabels: string[] = ["[a_silence_base]"];
+
       if (audioInputs.length > 0) {
         audioInputs.forEach((item, idx) => {
           const inputIdx = preparedVideoClips.length + idx;
-          const delayMs = Math.round(Math.max(0, item.clip.timelineStart) * 1000);
-          const volume = item.clip.volume ?? 0.8;
-          complexFilter.push(`[${inputIdx}:a]atrim=0:${item.clip.duration},asetpts=PTS-STARTPTS,volume=${volume},adelay=${delayMs}|${delayMs}[a${idx}]`);
+          const streamLabel = `a_clip_${idx}`;
+          const clipFilter = buildAudioClipFilter(item.clip, inputIdx, streamLabel);
+          complexFilter.push(clipFilter);
+          audioStreamLabels.push(`[${streamLabel}]`);
         });
 
-        const concatAudioInputs = audioInputs.map((_, idx) => `[a${idx}]`).join("");
-        complexFilter.push(`${concatAudioInputs}amix=inputs=${audioInputs.length}:duration=first:dropout_transition=2[a_mixed]`);
+        const mixedInputs = audioStreamLabels.join("");
+        complexFilter.push(
+          `${mixedInputs}amix=inputs=${audioStreamLabels.length}:duration=longest:dropout_transition=2[a_mixed]`
+        );
       } else {
-        // Fallback quiet audio if no track provided
-        complexFilter.push(`anullsrc=channel_layout=stereo:sample_rate=48000[a_mixed]`);
+        complexFilter.push(`[a_silence_base]anull[a_mixed]`);
       }
 
       command
@@ -160,7 +161,7 @@ export class ModularRenderPipeline implements IRenderBackend {
           `-c:a ${preset.codecAudio}`,
           `-b:a ${preset.audioBitrate}`,
           `-ar 48000`,
-          `-shortest`
+          `-t ${totalDuration.toFixed(2)}`,
         ])
         .output(outputPath)
         .on("start", (cmd) => {
