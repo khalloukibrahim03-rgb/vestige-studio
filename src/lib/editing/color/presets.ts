@@ -6,7 +6,7 @@ export interface ColorPreset {
   config: ColorConfig;
 }
 
-export const CINEMATIC_COLOR_PRESETS: Record<string, ColorPreset> = {
+export const COLOR_PRESETS: Record<string, ColorPreset> = {
   "Natural Documentary": {
     name: "Natural Documentary",
     description: "Unprocessed, authentic documentary realism with pristine color balance.",
@@ -78,6 +78,8 @@ export const CINEMATIC_COLOR_PRESETS: Record<string, ColorPreset> = {
   },
 };
 
+export const CINEMATIC_COLOR_PRESETS = COLOR_PRESETS;
+
 export function getColorPreset(name: string): ColorPreset {
-  return CINEMATIC_COLOR_PRESETS[name] || CINEMATIC_COLOR_PRESETS["Natural Documentary"];
+  return COLOR_PRESETS[name] || COLOR_PRESETS["Natural Documentary"];
 }

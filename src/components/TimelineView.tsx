@@ -1,27 +1,236 @@
 "use client";
 
-import React, { useState } from "react";
-import { CinematicTimeline, VideoClipItem, AudioClipItem } from "@/lib/editing/types";
-import { Play, Pause, Volume2, Sliders, Layers, Video, Music, Sparkles } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  CinematicTimeline,
+  VideoClipItem,
+  AudioClipItem,
+  ColorConfig,
+  TransitionType,
+} from "@/lib/editing/types";
+import { COLOR_PRESETS } from "@/lib/editing/color/presets";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Sliders,
+  Layers,
+  Video,
+  Music,
+  Sparkles,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  RotateCcw,
+  Clock,
+  Scissors,
+  Check,
+} from "lucide-react";
 
 interface TimelineViewProps {
   timeline: CinematicTimeline;
   videoUrl?: string;
   onRenderRequest?: () => void;
   isRendering?: boolean;
+  onUpdateTimeline?: (updated: CinematicTimeline) => void;
 }
 
-export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering }: TimelineViewProps) {
+export function TimelineView({
+  timeline: initialTimeline,
+  videoUrl,
+  onRenderRequest,
+  isRendering,
+  onUpdateTimeline,
+}: TimelineViewProps) {
+  const [timeline, setTimeline] = useState<CinematicTimeline>(initialTimeline);
+  const [selectedClipId, setSelectedClipId] = useState<string | null>(
+    timeline.videoTrack.clips[0]?.id || null
+  );
+  const [prevInitialTimeline, setPrevInitialTimeline] = useState(initialTimeline);
+  if (initialTimeline !== prevInitialTimeline) {
+    setPrevInitialTimeline(initialTimeline);
+    setTimeline(initialTimeline);
+  }
+
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedClipId, setSelectedClipId] = useState<string | null>(timeline.videoTrack.clips[0]?.id || null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const previewBoxRef = useRef<HTMLDivElement>(null);
 
   const selectedClip = timeline.videoTrack.clips.find((c) => c.id === selectedClipId);
-
   const totalDuration = timeline.totalDuration || 30;
 
-  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    setCurrentTime(e.currentTarget.currentTime);
+  // Sync timeline changes
+  const updateTimelineData = (updated: CinematicTimeline) => {
+    setTimeline(updated);
+    if (onUpdateTimeline) {
+      onUpdateTimeline(updated);
+    }
+  };
+
+  // Video playback controls
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    setCurrentTime(videoRef.current.currentTime);
+  };
+
+  const handleSeek = (time: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = time;
+    setCurrentTime(time);
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const toggleFullscreen = () => {
+    if (!previewBoxRef.current) return;
+    if (!document.fullscreenElement) {
+      previewBoxRef.current.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  // Clip Property Editors
+  const handleDurationChange = (delta: number) => {
+    if (!selectedClip) return;
+    const newDuration = Math.max(1, Math.round((selectedClip.duration + delta) * 10) / 10);
+    const updatedClips = timeline.videoTrack.clips.map((clip) =>
+      clip.id === selectedClip.id ? { ...clip, duration: newDuration } : clip
+    );
+
+    // Recalculate timeline starts and total duration
+    let curTime = 0;
+    const reindexedClips = updatedClips.map((clip) => {
+      const c = { ...clip, timelineStart: curTime };
+      curTime += clip.duration;
+      return c;
+    });
+
+    updateTimelineData({
+      ...timeline,
+      totalDuration: curTime,
+      videoTrack: { ...timeline.videoTrack, clips: reindexedClips },
+    });
+  };
+
+  const handleColorParamChange = (param: keyof ColorConfig, value: number) => {
+    if (!selectedClip) return;
+    const updatedClips = timeline.videoTrack.clips.map((clip) => {
+      if (clip.id === selectedClip.id) {
+        return {
+          ...clip,
+          color: {
+            ...clip.color,
+            [param]: value,
+          },
+        };
+      }
+      return clip;
+    });
+
+    updateTimelineData({
+      ...timeline,
+      videoTrack: { ...timeline.videoTrack, clips: updatedClips },
+    });
+  };
+
+  const handlePresetSelect = (presetName: string) => {
+    if (!selectedClip) return;
+    const preset = COLOR_PRESETS[presetName] || COLOR_PRESETS["Natural Documentary"];
+    const updatedClips = timeline.videoTrack.clips.map((clip) => {
+      if (clip.id === selectedClip.id) {
+        return {
+          ...clip,
+          colorPresetName: preset.name,
+          color: { ...preset.config },
+        };
+      }
+      return clip;
+    });
+
+    updateTimelineData({
+      ...timeline,
+      videoTrack: { ...timeline.videoTrack, clips: updatedClips },
+    });
+  };
+
+  const handleTransitionChange = (type: TransitionType) => {
+    if (!selectedClip) return;
+    const updatedClips = timeline.videoTrack.clips.map((clip) => {
+      if (clip.id === selectedClip.id) {
+        return {
+          ...clip,
+          transitionIn: {
+            ...clip.transitionIn,
+            type,
+            duration: type === "none" ? 0 : clip.transitionIn.duration || 0.5,
+          },
+        };
+      }
+      return clip;
+    });
+
+    updateTimelineData({
+      ...timeline,
+      videoTrack: { ...timeline.videoTrack, clips: updatedClips },
+    });
+  };
+
+  const handleMoveClip = (direction: "left" | "right") => {
+    if (!selectedClip) return;
+    const clips = [...timeline.videoTrack.clips];
+    const currentIndex = clips.findIndex((c) => c.id === selectedClip.id);
+    if (currentIndex < 0) return;
+
+    const targetIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= clips.length) return;
+
+    // Swap clips
+    const temp = clips[currentIndex];
+    clips[currentIndex] = clips[targetIndex];
+    clips[targetIndex] = temp;
+
+    let curTime = 0;
+    const reindexedClips = clips.map((clip) => {
+      const c = { ...clip, timelineStart: curTime };
+      curTime += clip.duration;
+      return c;
+    });
+
+    updateTimelineData({
+      ...timeline,
+      totalDuration: curTime,
+      videoTrack: { ...timeline.videoTrack, clips: reindexedClips },
+    });
+  };
+
+  const handleToggleTrackMute = (trackId: string) => {
+    const updatedTracks = timeline.audioTracks.map((track) =>
+      track.id === trackId ? { ...track, muted: !track.muted } : track
+    );
+    updateTimelineData({
+      ...timeline,
+      audioTracks: updatedTracks,
+    });
   };
 
   return (
@@ -29,17 +238,28 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
       {/* Top Section: Video Preview Player + Clip Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Preview Player Container (9:16 vertical view box) */}
-        <div className="lg:col-span-5 glass-panel rounded-xl p-4 border border-obsidian-700 flex flex-col items-center justify-center min-h-[480px]">
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-obsidian-800 text-gold-400 border border-gold-500/30 mb-3">
-            Realtime Preview Player ({timeline.targetWidth}x{timeline.targetHeight})
-          </span>
+        <div
+          ref={previewBoxRef}
+          className="lg:col-span-5 glass-panel rounded-xl p-4 border border-obsidian-700 flex flex-col items-center justify-between min-h-[480px]"
+        >
+          <div className="w-full flex items-center justify-between mb-2">
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-obsidian-800 text-gold-400 border border-gold-500/30">
+              Realtime Preview ({timeline.targetWidth}x{timeline.targetHeight})
+            </span>
+            <div className="flex items-center space-x-2 text-[11px] font-mono text-platinum-400">
+              <Clock className="w-3.5 h-3.5 text-gold-400" />
+              <span>
+                {currentTime.toFixed(1)}s / {totalDuration.toFixed(1)}s
+              </span>
+            </div>
+          </div>
 
-          <div className="relative aspect-[9/16] h-[380px] sm:h-[440px] bg-black rounded-lg overflow-hidden border border-obsidian-700 shadow-2xl flex items-center justify-center">
+          <div className="relative aspect-[9/16] h-[360px] sm:h-[420px] bg-black rounded-lg overflow-hidden border border-obsidian-700 shadow-2xl flex items-center justify-center w-full max-w-[280px]">
             {videoUrl ? (
               <video
+                ref={videoRef}
                 src={videoUrl}
-                controls
-                onTimeUpdate={handleVideoTimeUpdate}
+                onTimeUpdate={handleTimeUpdate}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 className="w-full h-full object-contain"
@@ -58,9 +278,47 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
               </div>
             )}
           </div>
+
+          {/* Interactive Player Controls */}
+          <div className="w-full mt-3 bg-obsidian-850 p-2.5 rounded-lg border border-obsidian-750 flex items-center justify-between space-x-3">
+            <button
+              onClick={togglePlay}
+              disabled={!videoUrl}
+              className="p-2 rounded bg-obsidian-800 hover:bg-obsidian-700 text-gold-400 disabled:opacity-40 transition-colors"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-gold-400" />}
+            </button>
+
+            {/* Scrub Slider */}
+            <input
+              type="range"
+              min={0}
+              max={totalDuration}
+              step={0.1}
+              value={currentTime}
+              onChange={(e) => handleSeek(parseFloat(e.target.value))}
+              disabled={!videoUrl}
+              className="w-full accent-gold-500 h-1.5 bg-obsidian-900 rounded-lg cursor-pointer"
+            />
+
+            <button
+              onClick={toggleMute}
+              disabled={!videoUrl}
+              className="p-2 rounded bg-obsidian-800 hover:bg-obsidian-700 text-platinum-300 disabled:opacity-40 transition-colors"
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 rounded bg-obsidian-800 hover:bg-obsidian-700 text-platinum-300 transition-colors"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Selected Clip Inspector & Color Grade Panel */}
+        {/* Selected Clip Inspector & Manual Editing Controls */}
         <div className="lg:col-span-7 glass-panel rounded-xl p-6 border border-obsidian-700 space-y-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-obsidian-750 pb-3">
@@ -71,42 +329,168 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
                 </h3>
               </div>
               {selectedClip && (
-                <span className="text-xs text-gold-400 font-mono bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/30">
-                  {selectedClip.sceneId}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleMoveClip("left")}
+                    title="Move clip left"
+                    className="p-1 rounded bg-obsidian-800 hover:bg-obsidian-700 text-platinum-300 text-xs flex items-center border border-obsidian-700"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleMoveClip("right")}
+                    title="Move clip right"
+                    className="p-1 rounded bg-obsidian-800 hover:bg-obsidian-700 text-platinum-300 text-xs flex items-center border border-obsidian-700"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs text-gold-400 font-mono bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/30">
+                    {selectedClip.sceneId}
+                  </span>
+                </div>
               )}
             </div>
 
             {selectedClip ? (
               <div className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
-                    <span className="text-platinum-500 font-mono block mb-0.5">Duration</span>
-                    <span className="text-platinum-200 font-semibold">{selectedClip.duration} seconds</span>
+                {/* Duration & Transition Adjustment */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="bg-obsidian-900 p-3 rounded border border-obsidian-750 space-y-1.5">
+                    <span className="text-platinum-400 font-mono block">Trim Clip Duration</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleDurationChange(-0.5)}
+                        className="px-2 py-1 bg-obsidian-800 hover:bg-obsidian-700 rounded text-platinum-200 border border-obsidian-700 font-mono font-bold"
+                      >
+                        -0.5s
+                      </button>
+                      <span className="text-gold-400 font-mono font-semibold px-2">
+                        {selectedClip.duration}s
+                      </span>
+                      <button
+                        onClick={() => handleDurationChange(0.5)}
+                        className="px-2 py-1 bg-obsidian-800 hover:bg-obsidian-700 rounded text-platinum-200 border border-obsidian-700 font-mono font-bold"
+                      >
+                        +0.5s
+                      </button>
+                    </div>
                   </div>
-                  <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
-                    <span className="text-platinum-500 font-mono block mb-0.5">Color Grade Preset</span>
-                    <span className="text-gold-400 font-semibold">{selectedClip.colorPresetName}</span>
-                  </div>
-                  <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
-                    <span className="text-platinum-500 font-mono block mb-0.5">Transition In</span>
-                    <span className="text-platinum-200 font-semibold">{selectedClip.transitionIn.type} ({selectedClip.transitionIn.duration}s)</span>
-                  </div>
-                  <div className="bg-obsidian-900 p-2.5 rounded border border-obsidian-750">
-                    <span className="text-platinum-500 font-mono block mb-0.5">Smart Crop Transform</span>
-                    <span className="text-platinum-200 font-semibold">1080x1920 (Center Subject Safe)</span>
+
+                  <div className="bg-obsidian-900 p-3 rounded border border-obsidian-750 space-y-1.5">
+                    <span className="text-platinum-400 font-mono block">Transition In</span>
+                    <select
+                      value={selectedClip.transitionIn?.type || "none"}
+                      onChange={(e) => handleTransitionChange(e.target.value as TransitionType)}
+                      className="w-full bg-obsidian-800 text-platinum-200 px-2.5 py-1 rounded border border-obsidian-700 font-mono text-xs focus:outline-none focus:border-gold-500/50"
+                    >
+                      <option value="none">Hard Cut (None)</option>
+                      <option value="fade_to_black">Fade To Black</option>
+                      <option value="dip_to_black">Dip To Black</option>
+                      <option value="crossfade">Crossfade</option>
+                      <option value="visual_continuity">Visual Continuity</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Color Matrix */}
-                <div className="bg-obsidian-900/80 p-3.5 rounded-lg border border-obsidian-750 space-y-2 text-xs">
-                  <span className="text-gold-400 font-mono font-semibold uppercase block">Color Grade Parameters</span>
-                  <div className="grid grid-cols-3 gap-2 text-platinum-300 font-mono">
-                    <div>Contrast: {selectedClip.color.contrast ?? 1.0}</div>
-                    <div>Exposure: {selectedClip.color.exposure ?? 0}</div>
-                    <div>Saturation: {selectedClip.color.saturation ?? 1.0}</div>
-                    <div>Temp Shift: {selectedClip.color.temperature ?? 0}</div>
-                    <div>Vignette: {selectedClip.color.vignette ?? 0}</div>
+                {/* Color Preset Selector */}
+                <div className="bg-obsidian-900 p-3 rounded border border-obsidian-750 space-y-2">
+                  <span className="text-platinum-400 font-mono text-xs block">Cinematic Color Preset</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.keys(COLOR_PRESETS).map((presetName) => (
+                      <button
+                        key={presetName}
+                        onClick={() => handlePresetSelect(presetName)}
+                        className={`text-[11px] font-mono px-2.5 py-1 rounded border transition-all ${
+                          selectedClip.colorPresetName === presetName
+                            ? "bg-gold-500/20 text-gold-400 border-gold-500/50 font-bold"
+                            : "bg-obsidian-800 text-platinum-400 border-obsidian-700 hover:text-platinum-200"
+                        }`}
+                      >
+                        {presetName}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live Color Sliders */}
+                <div className="bg-obsidian-900/90 p-3.5 rounded-lg border border-obsidian-750 space-y-3 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gold-400 font-mono font-semibold uppercase block">
+                      Fine-Tune Color Parameters
+                    </span>
+                    <button
+                      onClick={() => handlePresetSelect(selectedClip.colorPresetName)}
+                      className="text-[10px] text-platinum-400 hover:text-gold-400 font-mono flex items-center space-x-1"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset Preset</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-[11px]">
+                    <div>
+                      <div className="flex justify-between text-platinum-400 mb-1">
+                        <span>Contrast</span>
+                        <span>{selectedClip.color?.contrast?.toFixed(2) ?? "1.00"}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0.5}
+                        max={1.5}
+                        step={0.05}
+                        value={selectedClip.color?.contrast ?? 1.0}
+                        onChange={(e) => handleColorParamChange("contrast", parseFloat(e.target.value))}
+                        className="w-full accent-gold-500 h-1 bg-obsidian-800 rounded"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-platinum-400 mb-1">
+                        <span>Exposure</span>
+                        <span>{selectedClip.color?.exposure?.toFixed(2) ?? "0.00"}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={-0.5}
+                        max={0.5}
+                        step={0.05}
+                        value={selectedClip.color?.exposure ?? 0.0}
+                        onChange={(e) => handleColorParamChange("exposure", parseFloat(e.target.value))}
+                        className="w-full accent-gold-500 h-1 bg-obsidian-800 rounded"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-platinum-400 mb-1">
+                        <span>Saturation</span>
+                        <span>{selectedClip.color?.saturation?.toFixed(2) ?? "1.00"}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0.2}
+                        max={1.8}
+                        step={0.05}
+                        value={selectedClip.color?.saturation ?? 1.0}
+                        onChange={(e) => handleColorParamChange("saturation", parseFloat(e.target.value))}
+                        className="w-full accent-gold-500 h-1 bg-obsidian-800 rounded"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-platinum-400 mb-1">
+                        <span>Vignette</span>
+                        <span>{selectedClip.color?.vignette?.toFixed(2) ?? "0.00"}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0.0}
+                        max={0.6}
+                        step={0.05}
+                        value={selectedClip.color?.vignette ?? 0.0}
+                        onChange={(e) => handleColorParamChange("vignette", parseFloat(e.target.value))}
+                        className="w-full accent-gold-500 h-1 bg-obsidian-800 rounded"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,10 +502,14 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
           </div>
 
           {/* Render Action Bar */}
-          <div className="bg-obsidian-850 p-4 rounded-xl border border-obsidian-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="bg-obsidian-850 p-4 rounded-xl border border-obsidian-700 flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
             <div>
-              <span className="text-xs font-semibold text-platinum-200 block">FFmpeg Modular Render Engine</span>
-              <p className="text-[11px] text-platinum-400">Compiles high-bitrate MP4 with color grading & J/L-cuts</p>
+              <span className="text-xs font-semibold text-platinum-200 block">
+                FFmpeg Modular Render Engine
+              </span>
+              <p className="text-[11px] text-platinum-400">
+                Compiles high-bitrate MP4 with color grading & J/L-cuts
+              </p>
             </div>
 
             <button
@@ -154,7 +542,9 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
               Multi-Track Timeline Visualization
             </h3>
           </div>
-          <span className="text-xs text-platinum-400 font-mono">Total Duration: {totalDuration.toFixed(1)}s</span>
+          <span className="text-xs text-platinum-400 font-mono">
+            Total Duration: {totalDuration.toFixed(1)}s
+          </span>
         </div>
 
         {/* Timeline Tracks Area */}
@@ -192,7 +582,9 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-platinum-100 font-mono truncate">{clip.sceneId}</span>
+                      <span className="text-[10px] font-bold text-platinum-100 font-mono truncate">
+                        {clip.sceneId}
+                      </span>
                       <span className="text-[9px] text-gold-400 font-mono">{clip.duration}s</span>
                     </div>
                     <span className="text-[9px] text-platinum-400 truncate">{clip.colorPresetName}</span>
@@ -202,12 +594,27 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
             </div>
           </div>
 
-          {/* A1 — Environment Audio Track (with J/L cuts) */}
+          {/* Audio Tracks (A1 to A4) */}
           {timeline.audioTracks.map((track) => (
             <div key={track.id} className="space-y-1.5 pt-1">
-              <div className="flex items-center space-x-2 text-xs font-mono text-platinum-400">
-                <Music className="w-3.5 h-3.5 text-blue-400" />
-                <span>{track.name}</span>
+              <div className="flex items-center justify-between text-xs font-mono text-platinum-400">
+                <div className="flex items-center space-x-2">
+                  <Music className="w-3.5 h-3.5 text-blue-400" />
+                  <span>{track.name}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleToggleTrackMute(track.id)}
+                    className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                      track.muted
+                        ? "bg-red-500/20 border-red-500/40 text-red-400"
+                        : "bg-obsidian-800 border-obsidian-700 text-platinum-400 hover:text-platinum-200"
+                    }`}
+                  >
+                    {track.muted ? "Muted" : "Mute"}
+                  </button>
+                </div>
               </div>
 
               <div className="relative h-10 bg-obsidian-900 rounded border border-obsidian-750 flex overflow-hidden">
@@ -223,7 +630,11 @@ export function TimelineView({ timeline, videoUrl, onRenderRequest, isRendering 
                           width: `${widthPct}%`,
                           marginLeft: `${leftPct}%`,
                         }}
-                        className="h-full bg-blue-950/60 border border-blue-500/30 rounded p-1.5 flex items-center justify-between text-[10px] text-blue-300 font-mono shrink-0"
+                        className={`h-full border rounded p-1.5 flex items-center justify-between text-[10px] font-mono shrink-0 transition-opacity ${
+                          track.muted
+                            ? "opacity-30 bg-gray-900 border-gray-700 text-gray-500"
+                            : "bg-blue-950/60 border-blue-500/30 text-blue-300"
+                        }`}
                       >
                         <span className="truncate">{clip.sceneId || "Audio Track"}</span>
                         <span>{clip.duration.toFixed(1)}s</span>
